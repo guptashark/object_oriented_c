@@ -2,16 +2,17 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdarg.h>
 
 // The vtable.
 struct ag_std_vtable {
   size_t size;
-  void *(*ctor)(void *);
+  void *(*ctor)(void *, va_list *);
   void (*dtor)(void *);
 };
 
 // Memory functions - new and delete.
-void *ag_std_new(const struct ag_std_vtable *vt) {
+void *ag_std_new(const struct ag_std_vtable *vt, ...) {
 
   // a vt has a size.
   void *obj = malloc(vt->size);
@@ -26,7 +27,13 @@ void *ag_std_new(const struct ag_std_vtable *vt) {
 
   // call the ctor on the vtable on the object.
   // TODO: Use varargs.
-  vt->ctor(obj);
+
+  va_list ap;
+
+  // We assume there is a ctor.
+  va_start(ap, vt);
+  vt->ctor(obj, &ap);
+  va_end(ap);
 
   return obj;
 }
@@ -44,9 +51,10 @@ struct base {
   struct ag_std_vtable *vt;
 };
 
-void *base_ctor(void *obj) {
+void *base_ctor(void *obj, va_list *app) {
   // Nothing to init.
   (void)obj;
+  (void)app;
   printf("[base][ctor]\n");
 
   return obj;
@@ -73,9 +81,9 @@ struct derived_01 {
   struct base super;
 };
 
-void *derived_01_ctor(void *obj) {
+void *derived_01_ctor(void *obj, va_list *app) {
   // We call the parent class constructor.
-  obj = base_vt.ctor(obj);
+  obj = base_vt.ctor(obj, app);
   printf("[derived_01][ctor]\n");
 
   return obj;
@@ -103,9 +111,9 @@ struct derived_02 {
   struct base super;
 };
 
-void *derived_02_ctor(void *obj) {
+void *derived_02_ctor(void *obj, va_list *app) {
   // Nothing to init.
-  obj = base_vt.ctor(obj);
+  obj = base_vt.ctor(obj, app);
   printf("[derived_02][ctor]\n");
 
   return obj;
