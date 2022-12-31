@@ -85,6 +85,7 @@ void derived_01_dtor(void *obj) {
   // No extra memory to free.
   (void)obj;
   printf("[derived_01][dtor]\n");
+  base_vt.dtor(obj);
 }
 
 struct ag_std_vtable derived_01_vt = {
@@ -114,6 +115,7 @@ void derived_02_dtor(void *obj) {
   // No extra memory to free.
   (void)obj;
   printf("[derived_02][dtor]\n");
+  base_vt.dtor(obj);
 }
 
 struct ag_std_vtable derived_02_vt = {
