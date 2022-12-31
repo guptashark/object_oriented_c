@@ -55,7 +55,8 @@ void *base_ctor(void *obj, va_list *app) {
   // Nothing to init.
   (void)obj;
   (void)app;
-  printf("[base][ctor]\n");
+  int x = va_arg(*app, int);
+  printf("[base][ctor][%d]\n", x);
 
   return obj;
 }
@@ -84,7 +85,8 @@ struct derived_01 {
 void *derived_01_ctor(void *obj, va_list *app) {
   // We call the parent class constructor.
   obj = base_vt.ctor(obj, app);
-  printf("[derived_01][ctor]\n");
+  int x = va_arg(*app, int);
+  printf("[derived_01][ctor][%d]\n", x);
 
   return obj;
 }
@@ -114,7 +116,8 @@ struct derived_02 {
 void *derived_02_ctor(void *obj, va_list *app) {
   // Nothing to init.
   obj = base_vt.ctor(obj, app);
-  printf("[derived_02][ctor]\n");
+  int x = va_arg(*app, int);
+  printf("[derived_02][ctor][%d]\n", x);
 
   return obj;
 }
@@ -136,10 +139,10 @@ const struct ag_std_vtable *derived_02 = &derived_02_vt;
 
 int main(void) {
 
-  void *derived_01_obj = ag_std_new(derived_01);
+  void *derived_01_obj = ag_std_new(derived_01, 1, 2);
   ag_std_delete(derived_01_obj);
 
-  void *derived_02_obj = ag_std_new(derived_02);
+  void *derived_02_obj = ag_std_new(derived_02, 3, 4);
   ag_std_delete(derived_02_obj);
   return 0;
 }
