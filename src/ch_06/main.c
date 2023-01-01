@@ -197,7 +197,11 @@ struct integer {
 
 void *integer_ctor(void *obj, va_list *app) {
   (void)app;
+  struct integer *i = (struct integer *)obj;
+  i->x = va_arg(*app, int);
+
   printf("[integer][ctor]\n");
+
   return obj;
 }
 
@@ -207,8 +211,8 @@ void integer_dtor(void *obj) {
 }
 
 void integer_print(void *obj) {
-  (void)obj;
-  printf("[integer][print]\n");
+  struct integer *i = (struct integer *)obj;
+  printf("[integer][print][%d]\n", i->x);
 }
 
 // We need to create the vtable for integer using new.
