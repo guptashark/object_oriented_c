@@ -67,11 +67,9 @@ const struct ag_std_vtable *object = &object_vt;
 
 // An instance of object... do we need this?
 
-// Forward declare some functions.
-// TODO: Remove these.
-void *integer_ctor(void *obj, va_list *app);
-void integer_dtor(void *obj);
-void integer_print(void *obj);
+void *ag_std_new(const struct ag_std_vtable *vt, ...);
+void ag_std_delete(void *);
+void ag_std_print(void *);
 
 // Vtable functions, which we may not need right now.
 void *vtable_ctor(void *obj, va_list *app) {
@@ -94,9 +92,25 @@ void *vtable_ctor(void *obj, va_list *app) {
 
   memcpy(self, self->super, sizeof(struct ag_std_vtable));
 
+  void *f = va_arg(*app, void *);
+  while (f != NULL) {
+    void *g = va_arg(*app, void *);
+    if (f == ag_std_new) {
+      self->ctor = g;
+    } else if (f == ag_std_delete) {
+      self->dtor = g;
+    } else if (f == ag_std_print) {
+      self->print = g;
+    }
+
+    f = va_arg(*app, void *);
+  }
+
+  /*
   self->ctor = integer_ctor;
   self->dtor = integer_dtor;
   self->print = integer_print;
+  */
 
   return obj;
 }
@@ -313,6 +327,8 @@ int main(void) {
       object,     // The superclass.
       sizeof(struct integer),       // The size of the integer structure.
       ag_std_print, integer_print,  // The method of obj that we override.
+      ag_std_new, integer_ctor,
+      ag_std_delete, integer_dtor,
       0);
 
   printf("creating a new instance of class: integer\n");
