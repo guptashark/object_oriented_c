@@ -4,14 +4,98 @@
 #include <string.h>
 #include <stdarg.h>
 
+///////////////////////////////////////////////////////////////////////////////
+// object and vtable
+///////////////////////////////////////////////////////////////////////////////
+
+// Forward declare the vtable structure.
+struct ag_std_vtable;
+
+struct object {
+  struct ag_std_vtable *vt;
+};
+
 // The vtable.
 struct ag_std_vtable {
-  size_t size;
+  // struct object obj; // We need to fix this.
   char name[32];
+  struct ag_std_vtable *super;
+  size_t size;
   void *(*ctor)(void *, va_list *);
   void (*dtor)(void *);
   void (*print)(void *);
 };
+
+// Object functions.
+void *object_ctor(void *obj, va_list *app) {
+  // Nothing to init.
+  (void)obj;
+  (void)app;
+  int x = va_arg(*app, int);
+  printf("[object][ctor][%d]\n", x);
+
+  return obj;
+}
+
+void object_dtor(void *obj) {
+  // No extra memory to free.
+  (void)obj;
+  printf("[object][dtor]\n");
+}
+
+void object_print(void *obj) {
+  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  printf("[object][print][%s]\n", vt->name);
+}
+
+// The vtable of an object.
+struct ag_std_vtable object_vt = {
+  // object struct.
+  "object", // name
+  NULL, // ptr to vtable of the super
+  sizeof(struct object), // How come this doesn't work?
+  object_ctor,
+  object_dtor,
+  object_print
+};
+
+// The ptr to a vtable of an object.
+struct ag_std_vtable *object = &object_vt;
+// const struct ag_std_vtable *object = &object_vt;
+
+// An instance of object... do we need this?
+
+// Vtable functions, which we may not need right now.
+void *vtable_ctor(void *obj, va_list *app) {
+  // TODO: Implement this.
+  (void)obj;
+  (void)app;
+  return NULL;
+}
+
+void vtable_dtor(void *obj) {
+  // TODO: Implement this.
+  (void)obj;
+}
+
+void vtable_print(void *obj) {
+  // TODO: Implement this.
+  (void)obj;
+}
+
+// An instance of vtable.
+// Looks like we can't create this just yet... and need to do it later.
+/*
+struct ag_std_vtable vtable = {
+  // parent_obj, // ??
+  "vtable",
+  object, // vtable of the parent.
+  sizeof(struct ag_std_vtable),
+  vtable_ctor,
+  vtable_dtor,
+  vtable_print
+};
+*/
 
 // Memory functions - new and delete.
 void *ag_std_new(const struct ag_std_vtable *vt, ...) {
@@ -50,43 +134,7 @@ void ag_std_print(void *obj) {
   vt->print(obj);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// object
-///////////////////////////////////////////////////////////////////////////////
-struct object {
-  struct ag_std_vtable *vt;
-};
-
-void *object_ctor(void *obj, va_list *app) {
-  // Nothing to init.
-  (void)obj;
-  (void)app;
-  int x = va_arg(*app, int);
-  printf("[object][ctor][%d]\n", x);
-
-  return obj;
-}
-
-void object_dtor(void *obj) {
-  // No extra memory to free.
-  (void)obj;
-  printf("[object][dtor]\n");
-}
-
-void object_print(void *obj) {
-  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  printf("[object][print][%s]\n", vt->name);
-}
-
-struct ag_std_vtable base_vt = {
-  sizeof(struct object),
-  "object",
-  object_ctor,
-  object_dtor,
-  object_print
-};
-
-const struct ag_std_vtable *base = &base_vt;
+#if 0
 
 ///////////////////////////////////////////////////////////////////////////////
 // derived_01
@@ -164,8 +212,11 @@ struct ag_std_vtable derived_02_vt = {
 
 const struct ag_std_vtable *derived_02 = &derived_02_vt;
 
+#endif
+
 int main(void) {
 
+  /*
   void *derived_01_obj = ag_std_new(derived_01, 1, 2);
   ag_std_print(derived_01_obj);
   ag_std_delete(derived_01_obj);
@@ -173,6 +224,11 @@ int main(void) {
   void *derived_02_obj = ag_std_new(derived_02, 3, 4);
   ag_std_print(derived_02_obj);
   ag_std_delete(derived_02_obj);
+  */
+
+  void *obj = ag_std_new(object);
+  ag_std_print(obj);
+  ag_std_delete(obj);
 
   return 0;
 }
