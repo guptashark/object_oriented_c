@@ -106,12 +106,6 @@ void *vtable_ctor(void *obj, va_list *app) {
     f = va_arg(*app, void *);
   }
 
-  /*
-  self->ctor = integer_ctor;
-  self->dtor = integer_dtor;
-  self->print = integer_print;
-  */
-
   return obj;
 }
 
@@ -124,22 +118,6 @@ void vtable_print(void *obj) {
   // TODO: Implement this.
   (void)obj;
 }
-
-// An instance of vtable.
-// Looks like we can't create this just yet... and need to do it later.
-
-/*
-struct ag_std_vtable vtable = {
-  // parent_obj, // ??
-  // "vtable",
-  (struct ag_std_vtable *)object, // vtable of the parent.
-  sizeof(struct ag_std_vtable),
-  vtable_ctor,
-  vtable_dtor,
-  vtable_print
-};
-*/
-
 
 // Memory functions - new and delete.
 void *ag_std_new(const struct ag_std_vtable *vt, ...) {
@@ -230,16 +208,6 @@ int main(void) {
   };
 
   const struct ag_std_vtable *vtable = &vtable_vt;
-
-  /*
-  void *derived_01_obj = ag_std_new(derived_01, 1, 2);
-  ag_std_print(derived_01_obj);
-  ag_std_delete(derived_01_obj);
-
-  void *derived_02_obj = ag_std_new(derived_02, 3, 4);
-  ag_std_print(derived_02_obj);
-  ag_std_delete(derived_02_obj);
-  */
 
   void *obj = ag_std_new(object);
   ag_std_print(obj);
