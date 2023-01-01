@@ -51,39 +51,39 @@ void ag_std_print(void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// base
+// object
 ///////////////////////////////////////////////////////////////////////////////
-struct base {
+struct object {
   struct ag_std_vtable *vt;
 };
 
-void *base_ctor(void *obj, va_list *app) {
+void *object_ctor(void *obj, va_list *app) {
   // Nothing to init.
   (void)obj;
   (void)app;
   int x = va_arg(*app, int);
-  printf("[base][ctor][%d]\n", x);
+  printf("[object][ctor][%d]\n", x);
 
   return obj;
 }
 
-void base_dtor(void *obj) {
+void object_dtor(void *obj) {
   // No extra memory to free.
   (void)obj;
-  printf("[base][dtor]\n");
+  printf("[object][dtor]\n");
 }
 
-void base_print(void *obj) {
+void object_print(void *obj) {
   struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  printf("[base][print][%s]\n", vt->name);
+  printf("[object][print][%s]\n", vt->name);
 }
 
 struct ag_std_vtable base_vt = {
-  sizeof(struct base),
-  "cool_base",
-  base_ctor,
-  base_dtor,
-  base_print
+  sizeof(struct object),
+  "object",
+  object_ctor,
+  object_dtor,
+  object_print
 };
 
 const struct ag_std_vtable *base = &base_vt;
@@ -92,7 +92,7 @@ const struct ag_std_vtable *base = &base_vt;
 // derived_01
 ///////////////////////////////////////////////////////////////////////////////
 struct derived_01 {
-  struct base super;
+  struct object super;
 };
 
 void *derived_01_ctor(void *obj, va_list *app) {
@@ -130,7 +130,7 @@ const struct ag_std_vtable *derived_01 = &derived_01_vt;
 // derived_02
 ///////////////////////////////////////////////////////////////////////////////
 struct derived_02 {
-  struct base super;
+  struct object super;
 };
 
 void *derived_02_ctor(void *obj, va_list *app) {
