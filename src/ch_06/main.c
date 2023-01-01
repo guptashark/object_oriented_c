@@ -172,7 +172,9 @@ size_t ag_std_sizeof(struct ag_std_vtable *vt) {
 }
 */
 
-// Integer inherits from object
+///////////////////////////////////////////////////////////////////////////////
+// Integer (derived from object)
+///////////////////////////////////////////////////////////////////////////////
 struct integer {
   struct object obj;
   int x;
@@ -199,7 +201,35 @@ void integer_print(void *obj) {
   printf("[%s][print][%d]\n", vt->name, i->x);
 }
 
-// We need to create the vtable for integer using new.
+///////////////////////////////////////////////////////////////////////////////
+// Float (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct floating {
+  struct object obj;
+  float x;
+};
+
+void *floating_ctor(void *obj, va_list *app) {
+  (void)app;
+  struct floating *i = (struct floating *)obj;
+  i->x = va_arg(*app, double);
+
+  printf("[floating][ctor]\n");
+
+  return obj;
+}
+
+void floating_dtor(void *obj) {
+  (void)obj;
+  printf("[floating][dtor]\n");
+}
+
+void floating_print(void *obj) {
+  struct floating *i = (struct floating *)obj;
+  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  printf("[%s][print][%f]\n", vt->name, i->x);
+}
 
 int main(void) {
 
@@ -221,7 +251,7 @@ int main(void) {
   printf("creating a new class: integer\n");
   void *integer = ag_std_new(
       vtable,     // The type of object we are creating.
-      "integer",  // The name of the object. (integer time)
+      "integer",  // The name of the object. (integer type)
       object,     // The superclass.
       sizeof(struct integer),       // The size of the integer structure.
       ag_std_print, integer_print,  // The method of obj that we override.
@@ -229,10 +259,22 @@ int main(void) {
       ag_std_delete, integer_dtor,
       0);
 
+  void *floating = ag_std_new(
+      vtable,     // The type of the object we're creating.
+      "floating", // The name of the object. (floating type)
+      object,     // The superclass.
+      sizeof(struct floating),      // The size of the floating struct
+      ag_std_print, floating_print,
+      ag_std_delete, floating_dtor,
+      ag_std_new, floating_ctor,
+      0);
+
   printf("creating a new instance of class: integer\n");
   void *i = ag_std_new(integer, 4);
-  
+  void *d = ag_std_new(floating, 4.5);
+
   ag_std_print(i);
+  ag_std_print(d);
 
   ag_std_delete(obj);
 
