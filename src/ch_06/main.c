@@ -67,23 +67,21 @@ const struct ag_std_vtable *object = &object_vt;
 
 // An instance of object... do we need this?
 
+// Forward declare some functions.
+// TODO: Remove these.
+void *integer_ctor(void *obj, va_list *app);
+void integer_dtor(void *obj);
+void integer_print(void *obj);
+
 // Vtable functions, which we may not need right now.
 void *vtable_ctor(void *obj, va_list *app) {
   printf("[vtable][ctor]\n");
 
   struct ag_std_vtable *self = (struct ag_std_vtable *)obj;
-  printf("[vtable][ctor]\n");
 
   self->super = va_arg(*app, struct ag_std_vtable *);
-  printf("[vtable][ctor]\n");
   self->size = va_arg(*app, size_t);
-  printf("[vtable][ctor]\n");
-
-  const size_t offset = offsetof(struct ag_std_vtable, ctor);
-  printf("[vtable][ctor][before_memcpy]\n");
-
-  printf("%zu\n", offset);
-  printf("%zu\n", self->super->size);
+  // const size_t offset = offsetof(struct ag_std_vtable, ctor);
 
   // TODO
   // Need to implement the proper memcpy here...
@@ -96,7 +94,9 @@ void *vtable_ctor(void *obj, va_list *app) {
 
   memcpy(self, self->super, sizeof(struct ag_std_vtable));
 
-  printf("[vtable][ctor]\n");
+  self->ctor = integer_ctor;
+  self->dtor = integer_dtor;
+  self->print = integer_print;
 
   return obj;
 }
