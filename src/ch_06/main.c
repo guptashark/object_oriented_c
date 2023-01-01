@@ -18,7 +18,7 @@ struct object {
 // The vtable.
 struct ag_std_vtable {
   // struct object obj; // We need to fix this.
-  // char name[32];
+  char name[32];
   struct ag_std_vtable *super;
   size_t size;
   void *(*ctor)(void *, va_list *);
@@ -31,8 +31,7 @@ void *object_ctor(void *obj, va_list *app) {
   // Nothing to init.
   (void)obj;
   (void)app;
-  int x = va_arg(*app, int);
-  printf("[object][ctor][%d]\n", x);
+  printf("[object][ctor]\n");
 
   return obj;
 }
@@ -53,7 +52,7 @@ void object_print(void *obj) {
 // The vtable of an object.
 struct ag_std_vtable object_vt = {
   // object struct.
-  // "object", // name
+  "object", // name
   NULL, // ptr to vtable of the super
   sizeof(struct object), // How come this doesn't work?
   object_ctor,
@@ -77,6 +76,8 @@ void *vtable_ctor(void *obj, va_list *app) {
 
   struct ag_std_vtable *self = (struct ag_std_vtable *)obj;
 
+  char *name = va_arg(*app, char *);
+
   self->super = va_arg(*app, struct ag_std_vtable *);
   self->size = va_arg(*app, size_t);
   // const size_t offset = offsetof(struct ag_std_vtable, ctor);
@@ -91,6 +92,10 @@ void *vtable_ctor(void *obj, va_list *app) {
   */
 
   memcpy(self, self->super, sizeof(struct ag_std_vtable));
+
+  // Need to copy the name after the general memcpy, otherwise the
+  // memcpy overwrites the name field.
+  strcpy(self->name, name);
 
   void *f = va_arg(*app, void *);
   while (f != NULL) {
@@ -190,7 +195,8 @@ void integer_dtor(void *obj) {
 
 void integer_print(void *obj) {
   struct integer *i = (struct integer *)obj;
-  printf("[integer][print][%d]\n", i->x);
+  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  printf("[%s][print][%d]\n", vt->name, i->x);
 }
 
 // We need to create the vtable for integer using new.
@@ -199,7 +205,7 @@ int main(void) {
 
   struct ag_std_vtable vtable_vt = {
     // parent_obj, // ??
-    // "vtable",
+    "vtable",
     (struct ag_std_vtable *)object, // vtable of the parent.
     sizeof(struct ag_std_vtable),
     vtable_ctor,
@@ -215,7 +221,7 @@ int main(void) {
   printf("creating a new class: integer\n");
   void *integer = ag_std_new(
       vtable,     // The type of object we are creating.
-      // "integer",  // The name of the object. (integer time)
+      "integer",  // The name of the object. (integer time)
       object,     // The superclass.
       sizeof(struct integer),       // The size of the integer structure.
       ag_std_print, integer_print,  // The method of obj that we override.
