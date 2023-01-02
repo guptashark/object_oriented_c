@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // object and vtable
@@ -124,7 +125,9 @@ void vtable_print(void *obj) {
   (void)obj;
 }
 
-// Memory functions - new and delete.
+///////////////////////////////////////////////////////////////////////////////
+// General functions - new, delete, print.
+///////////////////////////////////////////////////////////////////////////////
 void *ag_std_new(const struct ag_std_vtable *vt, ...) {
 
   // a vt has a size.
@@ -159,6 +162,12 @@ void ag_std_delete(void *obj) {
 void ag_std_print(void *obj) {
   struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
   vt->print(obj);
+}
+
+void *ag_std_class_of(void *obj) {
+  // every possible object derives from object - so...
+  struct object *self = (struct object *)obj;
+  return self->vt;
 }
 
 /*
@@ -318,6 +327,14 @@ int main(void) {
   ag_std_print(i);
   ag_std_print(d);
   ag_std_print(s);
+
+  void *class_of_i = ag_std_class_of(i);
+  void *class_of_d = ag_std_class_of(d);
+  void *class_of_s = ag_std_class_of(s);
+
+  assert(class_of_i == integer);
+  assert(class_of_d == floating);
+  assert(class_of_s == string);
 
   ag_std_delete(obj);
 
