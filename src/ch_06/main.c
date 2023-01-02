@@ -43,11 +43,12 @@ void object_dtor(void *obj) {
   printf("[object][dtor]\n");
 }
 
+// Forward declare this.
+void *ag_std_class_of(void *obj);
+
 void object_print(void *obj) {
-  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  (void)vt;
-  // printf("[object][print][%s]\n", vt->name);
-  printf("[object][print][]\n");
+  struct ag_std_vtable *vt = (struct ag_std_vtable *)ag_std_class_of(obj);
+  printf("[%s][%p]\n", vt->name, obj);
 }
 
 // The vtable of an object.
@@ -314,7 +315,7 @@ int main(void) {
       "string",
       object,
       sizeof(struct string),
-      ag_std_print, string_print,
+//      ag_std_print, string_print,
       ag_std_delete, string_dtor,
       ag_std_new, string_ctor,
       0);
