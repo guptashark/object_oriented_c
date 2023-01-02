@@ -81,10 +81,18 @@ void *vtable_ctor(void *obj, va_list *app) {
   struct ag_std_vtable *self = (struct ag_std_vtable *)obj;
 
   char *name = va_arg(*app, char *);
+  strcpy(self->name, name);
 
   self->super = va_arg(*app, struct ag_std_vtable *);
-  void *super_copy = self->super;
   self->size = va_arg(*app, size_t);
+
+  // we want to copy over all of the functions.
+  // We can do this manually for now, and do the memcpy version later.
+  self->ctor = self->super->ctor;
+  self->dtor = self->super->dtor;
+  self->print = self->super->print;
+
+
   // const size_t offset = offsetof(struct ag_std_vtable, ctor);
 
   // TODO
@@ -96,13 +104,9 @@ void *vtable_ctor(void *obj, va_list *app) {
       self->super->size - offset);
   */
 
-  memcpy(self, self->super, sizeof(struct ag_std_vtable));
+  // memcpy(self, self->super, sizeof(struct ag_std_vtable));
 
-  // Need to copy the name after the general memcpy, otherwise the
-  // memcpy overwrites the name field.
-  strcpy(self->name, name);
-  self->super = super_copy;
-
+  // Overwrite any of the functions that the new class wants to specialize.
   void *f = va_arg(*app, void *);
   while (f != NULL) {
     void *g = va_arg(*app, void *);
