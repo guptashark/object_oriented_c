@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <assert.h>
 
+#define USING_SUPER
+
 ///////////////////////////////////////////////////////////////////////////////
 // object and vtable
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,6 +83,7 @@ void *vtable_ctor(void *obj, va_list *app) {
   char *name = va_arg(*app, char *);
 
   self->super = va_arg(*app, struct ag_std_vtable *);
+  void *super_copy = self->super;
   self->size = va_arg(*app, size_t);
   // const size_t offset = offsetof(struct ag_std_vtable, ctor);
 
@@ -98,6 +101,7 @@ void *vtable_ctor(void *obj, va_list *app) {
   // Need to copy the name after the general memcpy, otherwise the
   // memcpy overwrites the name field.
   strcpy(self->name, name);
+  self->super = super_copy;
 
   void *f = va_arg(*app, void *);
   while (f != NULL) {
@@ -199,9 +203,21 @@ struct integer {
 };
 
 void *integer_ctor(void *obj, va_list *app) {
+
+#ifdef USING_SUPER
+  // Run the parent ctor using super.
+  // We don't need to keep track of who the parent is.
+  struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
+  if (super->ctor == NULL) {
+    printf("super ctor is null??\n");
+  } else {
+    super->ctor(obj, app);
+  }
+#else
   // Run the parent ctor manually.
   // We know the parent is object.
   object->ctor(obj, app);
+#endif
 
   // now we run our own construction.
   struct integer *i = (struct integer *)obj;
@@ -216,8 +232,16 @@ void integer_dtor(void *obj) {
   (void)obj;
   printf("[integer][dtor]\n");
 
-  // now call the parent dtor.
+#ifdef USING_SUPER
+  // Run the parent dtor using super.
+  // We don't need to keep track of who the parent is.
+  struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
+  super->dtor(obj);
+#else
+  // Run the parent dtor manually.
+  // We know the parent is object.
   object->dtor(obj);
+#endif
 }
 
 void integer_print(void *obj) {
