@@ -50,7 +50,7 @@ void *ag_std_class_of(void *obj);
 
 void object_print(void *obj) {
   struct ag_std_vtable *vt = (struct ag_std_vtable *)ag_std_class_of(obj);
-  printf("[%s][%p]\n", vt->name, obj);
+  printf("[%s][%p]", vt->name, obj);
 }
 
 // The vtable of an object.
@@ -250,8 +250,9 @@ void integer_dtor(void *obj) {
 
 void integer_print(void *obj) {
   struct integer *i = (struct integer *)obj;
-  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  printf("[%s][print][%d]\n", vt->name, i->x);
+  struct ag_std_vtable *vt = ag_std_class_of(obj);
+  vt->super->print(obj);
+  printf("[%d]", i->x);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -375,6 +376,7 @@ int main(void) {
   */
 
   ag_std_print(i);
+  printf("\n");
   /*
   ag_std_print(d);
   ag_std_print(s);
