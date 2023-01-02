@@ -231,6 +231,37 @@ void floating_print(void *obj) {
   printf("[%s][print][%f]\n", vt->name, i->x);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// String (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct string {
+  struct object obj;
+  char s[64];
+};
+
+void *string_ctor(void *obj, va_list *app) {
+  (void)app;
+  struct string *str_obj = (struct string *)obj;
+  char *arg = va_arg(*app, char *);
+  strcpy(str_obj->s, arg);
+
+  printf("[string][ctor]\n");
+
+  return obj;
+}
+
+void string_dtor(void *obj) {
+  (void)obj;
+  printf("[string][dtor]\n");
+}
+
+void string_print(void *obj) {
+  struct string *str_obj = (struct string *)obj;
+  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  printf("[%s][print][%s]\n", vt->name, str_obj->s);
+}
+
 int main(void) {
 
   struct ag_std_vtable vtable_vt = {
@@ -269,12 +300,24 @@ int main(void) {
       ag_std_new, floating_ctor,
       0);
 
+  void *string = ag_std_new(
+      vtable,
+      "string",
+      object,
+      sizeof(struct string),
+      ag_std_print, string_print,
+      ag_std_delete, string_dtor,
+      ag_std_new, string_ctor,
+      0);
+
   printf("creating a new instance of class: integer\n");
   void *i = ag_std_new(integer, 4);
   void *d = ag_std_new(floating, 4.5);
+  void *s = ag_std_new(string, "Hello World");
 
   ag_std_print(i);
   ag_std_print(d);
+  ag_std_print(s);
 
   ag_std_delete(obj);
 
