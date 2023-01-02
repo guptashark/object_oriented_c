@@ -165,10 +165,18 @@ void ag_std_print(void *obj) {
   vt->print(obj);
 }
 
+// Return the vtable (class descriptor) of this object.
 void *ag_std_class_of(void *obj) {
   // every possible object derives from object - so...
   struct object *self = (struct object *)obj;
   return self->vt;
+}
+
+// Return the vtable (class descriptor) of the superclass of this object.
+// (Aka, return the parent class descriptor).
+void *ag_std_super(void *obj) {
+  struct object *self = (struct object *)obj;
+  return self->vt->super;
 }
 
 /*
@@ -191,7 +199,11 @@ struct integer {
 };
 
 void *integer_ctor(void *obj, va_list *app) {
-  (void)app;
+  // Run the parent ctor manually.
+  // We know the parent is object.
+  object->ctor(obj, app);
+
+  // now we run our own construction.
   struct integer *i = (struct integer *)obj;
   i->x = va_arg(*app, int);
 
@@ -203,6 +215,9 @@ void *integer_ctor(void *obj, va_list *app) {
 void integer_dtor(void *obj) {
   (void)obj;
   printf("[integer][dtor]\n");
+
+  // now call the parent dtor.
+  object->dtor(obj);
 }
 
 void integer_print(void *obj) {
@@ -286,8 +301,10 @@ int main(void) {
 
   const struct ag_std_vtable *vtable = &vtable_vt;
 
+  /*
   void *obj = ag_std_new(object);
   ag_std_print(obj);
+  */
 
   printf("creating a new class: integer\n");
   void *integer = ag_std_new(
@@ -300,6 +317,7 @@ int main(void) {
       ag_std_delete, integer_dtor,
       0);
 
+/*
   void *floating = ag_std_new(
       vtable,     // The type of the object we're creating.
       "floating", // The name of the object. (floating type)
@@ -319,25 +337,34 @@ int main(void) {
       ag_std_delete, string_dtor,
       ag_std_new, string_ctor,
       0);
+*/
 
   printf("creating a new instance of class: integer\n");
   void *i = ag_std_new(integer, 4);
+  /*
   void *d = ag_std_new(floating, 4.5);
   void *s = ag_std_new(string, "Hello World");
+  */
 
   ag_std_print(i);
+  /*
   ag_std_print(d);
   ag_std_print(s);
+  */
 
   void *class_of_i = ag_std_class_of(i);
+  /*
   void *class_of_d = ag_std_class_of(d);
   void *class_of_s = ag_std_class_of(s);
+  */
 
   assert(class_of_i == integer);
+  /*
   assert(class_of_d == floating);
   assert(class_of_s == string);
+  */
 
-  ag_std_delete(obj);
+  ag_std_delete(i);
 
   return 0;
 }
