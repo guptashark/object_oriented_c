@@ -187,6 +187,7 @@ void *ag_std_super(void *obj) {
   return self->vt->super;
 }
 
+
 /*
 size_t ag_std_sizeof(void *obj) {
   struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
@@ -316,6 +317,92 @@ void string_print(void *obj) {
   printf("[%s][print][%s]\n", vt->name, str_obj->s);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// container and container_vtable (derived from object and vtable)
+///////////////////////////////////////////////////////////////////////////////
+
+struct container {
+  struct object obj;
+
+  // We can lengthen as needed with other fields,
+  // but this is an abstract class, so children of this class will
+  // use the begin and end methods.
+};
+
+void *container_ctor(void *obj, va_list *app) {
+  // does nothing.
+  (void)obj;
+  (void)app;
+
+  printf("[container][ctor]\n");
+  return obj;
+}
+
+void container_dtor(void *obj) {
+  (void)obj;
+
+  printf("[container][dtor]\n");
+}
+
+void container_print(void *obj) {
+  (void)obj;
+
+  printf("[container][print]\n");
+}
+
+void *container_begin(void *obj) {
+  (void)obj;
+
+  return NULL;
+}
+
+void *container_end(void *obj) {
+  (void)obj;
+
+  return NULL;
+}
+
+struct container_vtable {
+  struct ag_std_vtable vt;
+  void *(*begin)(void *);
+  void *(*end)(void *);
+};
+
+void *container_vtable_ctor(void *obj, va_list *app) {
+
+  printf("[container_vtable][ctor]\n");
+  // Run the parent ctor using super.
+  // We don't need to keep track of who the parent is.
+  struct container_vtable *container_vt = NULL;
+  struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
+  if (super->ctor == NULL) {
+    printf("super ctor is null??\n");
+  } else {
+    container_vt = super->ctor(obj, app);
+  }
+
+  // Assign the container begin and end functions.
+  container_vt->begin = container_begin;
+  container_vt->end = container_end;
+
+  return obj;
+}
+
+void container_vtable_dtor(void *obj) {
+  (void)obj;
+  printf("[container_vtable][dtor]\n");
+}
+
+void *ag_std_begin(void *obj) {
+  struct container_vtable *cvt = *(struct container_vtable **)obj;
+  return cvt->begin(obj);
+}
+
+void *ag_std_end(void *obj) {
+  struct container_vtable *cvt = *(struct container_vtable **)obj;
+  return cvt->end(obj);
+}
+
 int main(void) {
 
   struct ag_std_vtable vtable_vt = {
@@ -329,6 +416,29 @@ int main(void) {
   };
 
   const struct ag_std_vtable *vtable = &vtable_vt;
+
+  printf("Creating a new metaclass container_vtable\n");
+  void *container_vtable = ag_std_new(
+      vtable,               // The type of the object.
+      "container_vtable",   // The name of the object.
+      vtable,               // The superclass.
+      sizeof(struct container_vtable),  // The size of the structure...
+      0);
+
+  void *container = ag_std_new(
+      container_vtable,     // The type of the object.
+      "container",          // The name of the object.
+      object,               // The superclass.
+      sizeof(struct container), // The size of the objects.
+      0);
+
+  void *c = ag_std_new(container);
+
+  ag_std_print(c);
+  printf("\n");
+  ag_std_begin(c);
+  ag_std_end(c);
+
 
   /*
   void *obj = ag_std_new(object);
