@@ -329,34 +329,34 @@ struct container {
   // use the begin and end methods.
 };
 
-void *container_ctor(void *obj, va_list *app) {
+void *list_ctor(void *obj, va_list *app) {
   // does nothing.
   (void)obj;
   (void)app;
 
-  printf("[container][ctor]\n");
+  printf("[list][ctor]\n");
   return obj;
 }
 
-void container_dtor(void *obj) {
+void list_dtor(void *obj) {
   (void)obj;
 
-  printf("[container][dtor]\n");
+  printf("[list][dtor]\n");
 }
 
-void container_print(void *obj) {
+void list_print(void *obj) {
   (void)obj;
 
-  printf("[container][print]\n");
+  printf("[list][print]\n");
 }
 
-void *container_begin(void *obj) {
+void *list_begin(void *obj) {
   (void)obj;
 
   return NULL;
 }
 
-void *container_end(void *obj) {
+void *list_end(void *obj) {
   (void)obj;
 
   return NULL;
@@ -370,7 +370,6 @@ struct container_vtable {
 
 void *container_vtable_ctor(void *obj, va_list *app) {
 
-  printf("[container_vtable][ctor]\n");
   // Run the parent ctor using super.
   // We don't need to keep track of who the parent is.
   struct container_vtable *container_vt = NULL;
@@ -381,9 +380,12 @@ void *container_vtable_ctor(void *obj, va_list *app) {
     container_vt = super->ctor(obj, app);
   }
 
+  printf("[container_vtable][ctor]\n");
+
   // Assign the container begin and end functions.
-  container_vt->begin = container_begin;
-  container_vt->end = container_end;
+  printf("assigning the container begin and end functions...\n");
+  container_vt->begin = list_begin;
+  container_vt->end = list_end;
 
   return obj;
 }
@@ -395,11 +397,17 @@ void container_vtable_dtor(void *obj) {
 
 void *ag_std_begin(void *obj) {
   struct container_vtable *cvt = *(struct container_vtable **)obj;
+  if (cvt->begin == NULL) {
+    printf("begin is null?\n");
+  }
   return cvt->begin(obj);
 }
 
 void *ag_std_end(void *obj) {
   struct container_vtable *cvt = *(struct container_vtable **)obj;
+  if (cvt->end == NULL) {
+    printf("end is null?\n");
+  }
   return cvt->end(obj);
 }
 
@@ -423,22 +431,30 @@ int main(void) {
       "container_vtable",   // The name of the object.
       vtable,               // The superclass.
       sizeof(struct container_vtable),  // The size of the structure...
+      ag_std_new, container_vtable_ctor,
       0);
 
-  void *container = ag_std_new(
+  printf("Created the container_vtable metaclass.\n");
+
+  void *list = ag_std_new(
       container_vtable,     // The type of the object.
-      "container",          // The name of the object.
+      "list",               // The name of the object.
       object,               // The superclass.
       sizeof(struct container), // The size of the objects.
+      ag_std_new, list_ctor,
       0);
 
-  void *c = ag_std_new(container);
+  printf("created the list class\n");
 
-  ag_std_print(c);
+  printf("Before creating a new list object...\n");
+  void *lst = ag_std_new(list);
+  printf("After creating a new list object...\n");
+
+  ag_std_print(lst);
   printf("\n");
-  ag_std_begin(c);
-  ag_std_end(c);
-
+  assert(ag_std_class_of(lst) == list);
+  ag_std_begin(lst);
+  ag_std_end(lst);
 
   /*
   void *obj = ag_std_new(object);
