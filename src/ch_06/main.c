@@ -321,7 +321,7 @@ void string_print(void *obj) {
 // container and container_vtable (derived from object and vtable)
 ///////////////////////////////////////////////////////////////////////////////
 
-struct container {
+struct list {
   struct object obj;
 
   // We can lengthen as needed with other fields,
@@ -352,13 +352,13 @@ void list_print(void *obj) {
 
 void *list_begin(void *obj) {
   (void)obj;
-
+  printf("[list][begin]\n");
   return NULL;
 }
 
 void *list_end(void *obj) {
   (void)obj;
-
+  printf("[list][end]\n");
   return NULL;
 }
 
@@ -383,7 +383,6 @@ void *container_vtable_ctor(void *obj, va_list *app) {
   printf("[container_vtable][ctor]\n");
 
   // Assign the container begin and end functions.
-  printf("assigning the container begin and end functions...\n");
   container_vt->begin = list_begin;
   container_vt->end = list_end;
 
@@ -397,17 +396,11 @@ void container_vtable_dtor(void *obj) {
 
 void *ag_std_begin(void *obj) {
   struct container_vtable *cvt = *(struct container_vtable **)obj;
-  if (cvt->begin == NULL) {
-    printf("begin is null?\n");
-  }
   return cvt->begin(obj);
 }
 
 void *ag_std_end(void *obj) {
   struct container_vtable *cvt = *(struct container_vtable **)obj;
-  if (cvt->end == NULL) {
-    printf("end is null?\n");
-  }
   return cvt->end(obj);
 }
 
@@ -425,7 +418,6 @@ int main(void) {
 
   const struct ag_std_vtable *vtable = &vtable_vt;
 
-  printf("Creating a new metaclass container_vtable\n");
   void *container_vtable = ag_std_new(
       vtable,               // The type of the object.
       "container_vtable",   // The name of the object.
@@ -434,21 +426,15 @@ int main(void) {
       ag_std_new, container_vtable_ctor,
       0);
 
-  printf("Created the container_vtable metaclass.\n");
-
   void *list = ag_std_new(
       container_vtable,     // The type of the object.
       "list",               // The name of the object.
       object,               // The superclass.
-      sizeof(struct container), // The size of the objects.
+      sizeof(struct list), // The size of the objects.
       ag_std_new, list_ctor,
       0);
 
-  printf("created the list class\n");
-
-  printf("Before creating a new list object...\n");
   void *lst = ag_std_new(list);
-  printf("After creating a new list object...\n");
 
   ag_std_print(lst);
   printf("\n");
@@ -494,7 +480,6 @@ int main(void) {
       0);
 */
 
-  printf("creating a new instance of class: integer\n");
   void *i = ag_std_new(integer, 4);
   /*
   void *d = ag_std_new(floating, 4.5);
