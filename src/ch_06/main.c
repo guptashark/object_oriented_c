@@ -413,7 +413,7 @@ void list_print(void *obj) {
     }
 
     ag_std_print(c->obj);
-    printf("]\n");
+    printf("]");
   }
 
 }
@@ -674,6 +674,37 @@ int main(void) {
 
   ag_std_print(i);
   printf("\n");
+  {
+    void *ai = ag_std_new(integer, 10);
+    void *as = ag_std_new(string, "ten");
+
+    void *bi = ag_std_new(integer, 20);
+    void *bs = ag_std_new(string, "twenty");
+
+    void *ci = ag_std_new(integer, 30);
+    void *cs = ag_std_new(string, "thirty");
+
+    void *lst_a = ag_std_new(list);
+    list_push_front(lst_a, as);
+    list_push_front(lst_a, ai);
+
+    void *lst_b = ag_std_new(list);
+    list_push_front(lst_b, bs);
+    list_push_front(lst_b, bi);
+
+    void *lst_c = ag_std_new(list);
+    list_push_front(lst_c, cs);
+    list_push_front(lst_c, ci);
+
+    void *lst_final = ag_std_new(list);
+    list_push_front(lst_final, lst_c);
+    list_push_front(lst_final, lst_b);
+    list_push_front(lst_final, lst_a);
+
+    ag_std_print(lst_final);
+    printf("\n");
+  }
+
   /*
   ag_std_print(d);
   ag_std_print(s);
