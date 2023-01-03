@@ -107,9 +107,11 @@ void *vtable_ctor(void *obj, va_list *app) {
   // memcpy(self, self->super, sizeof(struct ag_std_vtable));
 
   // Overwrite any of the functions that the new class wants to specialize.
-  void *f = va_arg(*app, void *);
+  va_list ap = *app;
+
+  void *f = va_arg(ap, void *);
   while (f != NULL) {
-    void *g = va_arg(*app, void *);
+    void *g = va_arg(ap, void *);
     if (f == ag_std_new) {
       self->ctor = g;
     } else if (f == ag_std_delete) {
@@ -118,7 +120,7 @@ void *vtable_ctor(void *obj, va_list *app) {
       self->print = g;
     }
 
-    f = va_arg(*app, void *);
+    f = va_arg(ap, void *);
   }
 
   return obj;
@@ -416,6 +418,10 @@ struct container_vtable {
   void *(*end)(void *);
 };
 
+// Forward declare these so that the container_vtable_ctor has them.
+void *ag_std_begin(void *obj);
+void *ag_std_end(void *obj);
+
 void *container_vtable_ctor(void *obj, va_list *app) {
 
   // Run the parent ctor using super.
@@ -431,8 +437,20 @@ void *container_vtable_ctor(void *obj, va_list *app) {
   printf("[container_vtable][ctor]\n");
 
   // Assign the container begin and end functions.
-  container_vt->begin = list_begin;
-  container_vt->end = list_end;
+  va_list ap = *app;
+
+  void *f = va_arg(ap, void *);
+
+  while (f != NULL) {
+    void *g = va_arg(ap, void *);
+    if (f == ag_std_begin) {
+      container_vt->begin = g;
+    } else if (f == ag_std_end) {
+      container_vt->end = g;
+    }
+
+    f = va_arg(ap, void *);
+  }
 
   return obj;
 }
@@ -480,6 +498,8 @@ int main(void) {
       object,               // The superclass.
       sizeof(struct list), // The size of the objects.
       ag_std_new, list_ctor,
+      ag_std_begin, list_begin,
+      ag_std_end, list_end,
       0);
 
   void *vector = ag_std_new(
@@ -488,10 +508,11 @@ int main(void) {
       object,
       sizeof(struct vector),
       ag_std_new, vector_ctor,
+      ag_std_begin, vector_begin,
+      ag_std_end, vector_end,
       0);
 
   void *lst = ag_std_new(list);
-  void *v = ag_std_new(vector);
 
   ag_std_print(lst);
   printf("\n");
@@ -499,6 +520,7 @@ int main(void) {
   ag_std_begin(lst);
   ag_std_end(lst);
 
+  void *v = ag_std_new(vector);
   ag_std_print(v);
   printf("\n");
   assert(ag_std_class_of(v) == vector);
