@@ -318,7 +318,7 @@ void string_print(void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// container and container_vtable (derived from object and vtable)
+// list (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
 struct list {
@@ -362,6 +362,54 @@ void *list_end(void *obj) {
   return NULL;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// vector (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct vector {
+  struct object obj;
+
+  // We can lengthen as needed with other fields,
+  // but this is an abstract class, so children of this class will
+  // use the begin and end methods.
+};
+
+void *vector_ctor(void *obj, va_list *app) {
+  // does nothing.
+  (void)obj;
+  (void)app;
+
+  printf("[vector][ctor]\n");
+  return obj;
+}
+
+void vector_dtor(void *obj) {
+  (void)obj;
+
+  printf("[vector][dtor]\n");
+}
+
+void vector_print(void *obj) {
+  (void)obj;
+
+  printf("[vector][print]\n");
+}
+
+void *vector_begin(void *obj) {
+  (void)obj;
+  printf("[vector][begin]\n");
+  return NULL;
+}
+
+void *vector_end(void *obj) {
+  (void)obj;
+  printf("[vector][end]\n");
+  return NULL;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// container_vtable (derived from and vtable)
+///////////////////////////////////////////////////////////////////////////////
 struct container_vtable {
   struct ag_std_vtable vt;
   void *(*begin)(void *);
@@ -434,7 +482,16 @@ int main(void) {
       ag_std_new, list_ctor,
       0);
 
+  void *vector = ag_std_new(
+      container_vtable,
+      "vector",
+      object,
+      sizeof(struct vector),
+      ag_std_new, vector_ctor,
+      0);
+
   void *lst = ag_std_new(list);
+  void *v = ag_std_new(vector);
 
   ag_std_print(lst);
   printf("\n");
@@ -442,12 +499,17 @@ int main(void) {
   ag_std_begin(lst);
   ag_std_end(lst);
 
+  ag_std_print(v);
+  printf("\n");
+  assert(ag_std_class_of(v) == vector);
+  ag_std_begin(v);
+  ag_std_end(v);
+
   /*
   void *obj = ag_std_new(object);
   ag_std_print(obj);
   */
 
-  printf("creating a new class: integer\n");
   void *integer = ag_std_new(
       vtable,     // The type of object we are creating.
       "integer",  // The name of the object. (integer type)
