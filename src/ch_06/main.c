@@ -284,8 +284,9 @@ void floating_dtor(void *obj) {
 
 void floating_print(void *obj) {
   struct floating *i = (struct floating *)obj;
-  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  printf("[%s][print][%f]\n", vt->name, i->x);
+  // struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  // printf("[%s][print][%f]\n", vt->name, i->x);
+  printf("%.2f", i->x);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -631,7 +632,7 @@ int main(void) {
       ag_std_delete, integer_dtor,
       0);
 
-/*
+
   void *floating = ag_std_new(
       vtable,     // The type of the object we're creating.
       "floating", // The name of the object. (floating type)
@@ -641,7 +642,7 @@ int main(void) {
       ag_std_delete, floating_dtor,
       ag_std_new, floating_ctor,
       0);
-*/
+
 
   void *string = ag_std_new(
       vtable,
@@ -669,8 +670,10 @@ int main(void) {
   list_push_front(lst, s1);
   list_push_front(lst, i3);
   list_push_front(lst, i4);
+  list_push_front(lst, ag_std_new(floating, 5.3));
 
   ag_std_print(lst);
+  printf("\n");
 
   ag_std_print(i);
   printf("\n");
