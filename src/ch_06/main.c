@@ -253,9 +253,9 @@ void integer_dtor(void *obj) {
 
 void integer_print(void *obj) {
   struct integer *i = (struct integer *)obj;
-  struct ag_std_vtable *vt = ag_std_class_of(obj);
-  vt->super->print(obj);
-  printf("[%d]", i->x);
+  // struct ag_std_vtable *vt = ag_std_class_of(obj);
+  // vt->super->print(obj);
+  printf("%d", i->x);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -315,41 +315,107 @@ void string_dtor(void *obj) {
 
 void string_print(void *obj) {
   struct string *str_obj = (struct string *)obj;
-  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
-  printf("[%s][print][%s]\n", vt->name, str_obj->s);
+  // struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  // printf("[%s][print][%s]\n", vt->name, str_obj->s);
+  printf("\"%s\"", str_obj->s);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // list (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
-struct list {
-  struct object obj;
+/* Our list will (at the moment) allow for any kind of object to be
+ * inserted into it, not just objects of a specific type, (though we can
+ * technically enforce this by providing the allowed type during
+ * the lists construction, ie: void *lst = ag_std_new(list, integer),
+ * at which point every insert will do a check to ensure that the object
+ * being inserted is in fact of type integer.
+ */
 
-  // We can lengthen as needed with other fields,
-  // but this is an abstract class, so children of this class will
-  // use the begin and end methods.
+struct list_node {
+  void *obj; // not a pointer to the base object, just a pointer to
+             // the newly inserted object.
+  struct list_node *next;
+  struct list_node *prev;
+};
+
+// Internal function, nobody except list functions will call this.
+struct list_node *list_node_ctor(void *obj) {
+  struct list_node *node = malloc(sizeof(struct list_node));
+  node->next = NULL;
+  node->prev = NULL;
+  node->obj = obj;
+  return node;
+}
+
+void list_node_link(struct list_node *a, struct list_node *b) {
+  a->next = b;
+  b->prev = a;
+}
+
+void list_node_insert
+(struct list_node *a, struct list_node *b, struct list_node *c) {
+  a->next = b;
+  b->next = c;
+
+  b->prev = a;
+  c->prev = b;
+}
+
+struct list {
+  struct object obj; // base
+
+  struct list_node *front;
+  struct list_node *back;
+  size_t size;
 };
 
 void *list_ctor(void *obj, va_list *app) {
   // does nothing.
-  (void)obj;
   (void)app;
 
   printf("[list][ctor]\n");
+  struct list *lst = obj;
+
+  struct list_node *a = list_node_ctor(NULL);
+  struct list_node *b = list_node_ctor(NULL);
+
+  list_node_link(a, b);
+  lst->front = a;
+  lst->back = b;
+
+  lst->size = 0;
+
   return obj;
 }
 
 void list_dtor(void *obj) {
   (void)obj;
 
+  // TODO: Delete stuff.
   printf("[list][dtor]\n");
 }
 
 void list_print(void *obj) {
-  (void)obj;
+  struct list *lst = obj;
 
-  printf("[list][print]\n");
+  if (lst->size == 0) {
+    printf("[{}]\n");
+    return;
+  } else {
+
+    printf("[");
+    struct list_node *c = lst->front->next;
+    while (c->next->obj != NULL) {
+      ag_std_print(c->obj);
+      printf(", ");
+      c = c->next;
+    }
+
+    ag_std_print(c->obj);
+    printf("]\n");
+  }
+
 }
 
 void *list_begin(void *obj) {
@@ -362,6 +428,28 @@ void *list_end(void *obj) {
   (void)obj;
   printf("[list][end]\n");
   return NULL;
+}
+
+void list_push_front(void *lst_arg, void *obj) {
+  struct list *lst = lst_arg;
+  struct list_node *new_node = list_node_ctor(obj);
+
+  struct list_node *a = lst->front;
+  struct list_node *c = a->next;
+  list_node_insert(a, new_node, c);
+
+  lst->size++;
+}
+
+void list_push_back(void *lst_arg, void *obj) {
+  struct list *lst = lst_arg;
+  struct list_node *new_node = list_node_ctor(obj);
+
+  struct list_node *c = lst->back;
+  struct list_node *a = c->prev;
+  list_node_insert(a, new_node, c);
+
+  lst->size++;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -500,6 +588,7 @@ int main(void) {
       ag_std_new, list_ctor,
       ag_std_begin, list_begin,
       ag_std_end, list_end,
+      ag_std_print, list_print,
       0);
 
   void *vector = ag_std_new(
@@ -552,23 +641,36 @@ int main(void) {
       ag_std_delete, floating_dtor,
       ag_std_new, floating_ctor,
       0);
+*/
 
   void *string = ag_std_new(
       vtable,
       "string",
       object,
       sizeof(struct string),
-//      ag_std_print, string_print,
+      ag_std_print, string_print,
       ag_std_delete, string_dtor,
       ag_std_new, string_ctor,
       0);
-*/
+
+  void *s1 = ag_std_new(string, "Dumbledore");
 
   void *i = ag_std_new(integer, 4);
+  void *i2 = ag_std_new(integer, 7);
+  void *i3 = ag_std_new(integer, 1);
+  void *i4 = ag_std_new(integer, -3);
   /*
   void *d = ag_std_new(floating, 4.5);
   void *s = ag_std_new(string, "Hello World");
   */
+
+  list_push_front(lst, i);
+  list_push_front(lst, i2);
+  list_push_front(lst, s1);
+  list_push_front(lst, i3);
+  list_push_front(lst, i4);
+
+  ag_std_print(lst);
 
   ag_std_print(i);
   printf("\n");
