@@ -7,6 +7,8 @@
 
 #define USING_SUPER
 
+#define DEBUG_MSG 0
+
 ///////////////////////////////////////////////////////////////////////////////
 // object and vtable
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,7 +36,10 @@ void *object_ctor(void *obj, va_list *app) {
   // Nothing to init.
   (void)obj;
   (void)app;
-  printf("[object][ctor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[object][ctor]\n");
+  }
 
   return obj;
 }
@@ -42,7 +47,10 @@ void *object_ctor(void *obj, va_list *app) {
 void object_dtor(void *obj) {
   // No extra memory to free.
   (void)obj;
-  printf("[object][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[object][dtor]\n");
+  }
 }
 
 // Forward declare this.
@@ -76,7 +84,9 @@ void ag_std_print(void *);
 
 // Vtable functions, which we may not need right now.
 void *vtable_ctor(void *obj, va_list *app) {
-  printf("[vtable][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[vtable][ctor]\n");
+  }
 
   struct ag_std_vtable *self = (struct ag_std_vtable *)obj;
 
@@ -230,14 +240,19 @@ void *integer_ctor(void *obj, va_list *app) {
   struct integer *i = (struct integer *)obj;
   i->x = va_arg(*app, int);
 
-  printf("[integer][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[integer][ctor]\n");
+  }
 
   return obj;
 }
 
 void integer_dtor(void *obj) {
   (void)obj;
-  printf("[integer][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[integer][dtor]\n");
+  }
 
 #ifdef USING_SUPER
   // Run the parent dtor using super.
@@ -272,14 +287,19 @@ void *floating_ctor(void *obj, va_list *app) {
   struct floating *i = (struct floating *)obj;
   i->x = va_arg(*app, double);
 
-  printf("[floating][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[floating][ctor]\n");
+  }
 
   return obj;
 }
 
 void floating_dtor(void *obj) {
   (void)obj;
-  printf("[floating][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[floating][dtor]\n");
+  }
 }
 
 void floating_print(void *obj) {
@@ -304,14 +324,19 @@ void *string_ctor(void *obj, va_list *app) {
   char *arg = va_arg(*app, char *);
   strcpy(str_obj->s, arg);
 
-  printf("[string][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[string][ctor]\n");
+  }
 
   return obj;
 }
 
 void string_dtor(void *obj) {
   (void)obj;
-  printf("[string][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[string][dtor]\n");
+  }
 }
 
 void string_print(void *obj) {
@@ -375,7 +400,10 @@ void *list_ctor(void *obj, va_list *app) {
   // does nothing.
   (void)app;
 
-  printf("[list][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[list][ctor]\n");
+  }
+
   struct list *lst = obj;
 
   struct list_node *a = list_node_ctor(NULL);
@@ -394,14 +422,17 @@ void list_dtor(void *obj) {
   (void)obj;
 
   // TODO: Delete stuff.
-  printf("[list][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[list][dtor]\n");
+  }
 }
 
 void list_print(void *obj) {
   struct list *lst = obj;
 
   if (lst->size == 0) {
-    printf("[{}]\n");
+    printf("[]");
     return;
   } else {
 
@@ -421,13 +452,21 @@ void list_print(void *obj) {
 
 void *list_begin(void *obj) {
   (void)obj;
-  printf("[list][begin]\n");
+
+  if (DEBUG_MSG) {
+    printf("[list][begin]\n");
+  }
+
   return NULL;
 }
 
 void *list_end(void *obj) {
   (void)obj;
-  printf("[list][end]\n");
+
+  if (DEBUG_MSG) {
+    printf("[list][end]\n");
+  }
+
   return NULL;
 }
 
@@ -470,31 +509,46 @@ void *vector_ctor(void *obj, va_list *app) {
   (void)obj;
   (void)app;
 
-  printf("[vector][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[vector][ctor]\n");
+  }
+
   return obj;
 }
 
 void vector_dtor(void *obj) {
   (void)obj;
 
-  printf("[vector][dtor]\n");
+  if (DEBUG_MSG) {
+    printf("[vector][dtor]\n");
+  }
 }
 
 void vector_print(void *obj) {
   (void)obj;
 
-  printf("[vector][print]\n");
+  if (DEBUG_MSG) {
+    printf("[vector][print]\n");
+  }
 }
 
 void *vector_begin(void *obj) {
   (void)obj;
-  printf("[vector][begin]\n");
+
+  if (DEBUG_MSG) {
+    printf("[vector][begin]\n");
+  }
+
   return NULL;
 }
 
 void *vector_end(void *obj) {
   (void)obj;
-  printf("[vector][end]\n");
+
+  if (DEBUG_MSG) {
+    printf("[vector][end]\n");
+  }
+
   return NULL;
 }
 
@@ -523,7 +577,9 @@ void *container_vtable_ctor(void *obj, va_list *app) {
     container_vt = super->ctor(obj, app);
   }
 
-  printf("[container_vtable][ctor]\n");
+  if (DEBUG_MSG) {
+    printf("[container_vtable][ctor]\n");
+  }
 
   // Assign the container begin and end functions.
   va_list ap = *app;
@@ -546,7 +602,10 @@ void *container_vtable_ctor(void *obj, va_list *app) {
 
 void container_vtable_dtor(void *obj) {
   (void)obj;
-  printf("[container_vtable][dtor]\n");
+
+  if (DEBUG_MSG) {
+    printf("[container_vtable][dtor]\n");
+  }
 }
 
 void *ag_std_begin(void *obj) {
@@ -660,6 +719,7 @@ int main(void) {
   void *i2 = ag_std_new(integer, 7);
   void *i3 = ag_std_new(integer, 1);
   void *i4 = ag_std_new(integer, -3);
+
   /*
   void *d = ag_std_new(floating, 4.5);
   void *s = ag_std_new(string, "Hello World");
@@ -724,8 +784,6 @@ int main(void) {
   assert(class_of_d == floating);
   assert(class_of_s == string);
   */
-
-  ag_std_delete(i);
 
   return 0;
 }
