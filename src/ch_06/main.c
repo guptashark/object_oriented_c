@@ -725,12 +725,12 @@ int main(void) {
   void *s = ag_std_new(string, "Hello World");
   */
 
-  list_push_front(lst, i);
-  list_push_front(lst, i2);
-  list_push_front(lst, s1);
-  list_push_front(lst, i3);
-  list_push_front(lst, i4);
-  list_push_front(lst, ag_std_new(floating, 5.3));
+  list_push_back(lst, i);
+  list_push_back(lst, i2);
+  list_push_back(lst, s1);
+  list_push_back(lst, i3);
+  list_push_back(lst, i4);
+  list_push_back(lst, ag_std_new(floating, 5.3));
 
   ag_std_print(lst);
   printf("\n");
@@ -748,21 +748,25 @@ int main(void) {
     void *cs = ag_std_new(string, "thirty");
 
     void *lst_a = ag_std_new(list);
-    list_push_front(lst_a, as);
-    list_push_front(lst_a, ai);
+    list_push_back(lst_a, ai);
+    list_push_back(lst_a, as);
 
     void *lst_b = ag_std_new(list);
-    list_push_front(lst_b, bs);
-    list_push_front(lst_b, bi);
+    list_push_back(lst_b, bi);
+    list_push_back(lst_b, bs);
 
     void *lst_c = ag_std_new(list);
-    list_push_front(lst_c, cs);
-    list_push_front(lst_c, ci);
+    list_push_back(lst_c, ci);
+    list_push_back(lst_c, cs);
 
     void *lst_final = ag_std_new(list);
-    list_push_front(lst_final, lst_c);
-    list_push_front(lst_final, lst_b);
-    list_push_front(lst_final, lst_a);
+    list_push_back(lst_final, lst_a);
+
+    ag_std_print(lst_final);
+    printf("\n");
+
+    list_push_back(lst_final, lst_b);
+    list_push_back(lst_final, lst_c);
 
     ag_std_print(lst_final);
     printf("\n");
