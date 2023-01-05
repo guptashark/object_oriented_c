@@ -871,6 +871,23 @@ int vec_iter_not_equal(void *obj_a, void *obj_b) {
   return a->i != b->i;
 }
 
+void ag_std_range_print(void *rng) {
+
+  void *it = ag_std_begin(rng);
+  void *end = ag_std_end(rng);
+
+  printf("range_print( ");
+
+  while (ag_std_iter_not_equal(it, end)) {
+    void *val = ag_std_iter_deref(it);
+    ag_std_print(val);
+    printf(" ");
+    ag_std_iter_increment(it);
+  }
+
+  printf(")\n");
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -1032,6 +1049,8 @@ int main(void) {
     }
 
     printf("}\n");
+
+    ag_std_range_print(lst);
   }
 
   ag_std_print(lst);
@@ -1103,6 +1122,8 @@ int main(void) {
       }
 
       printf("}\n");
+
+      ag_std_range_print(v);
     }
   }
 
