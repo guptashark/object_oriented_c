@@ -447,8 +447,10 @@ void list_print(void *obj) {
     ag_std_print(c->obj);
     printf("]");
   }
-
 }
+
+// TODO: Remove this from the global namespace... somehow.
+void *list_iter;
 
 void *list_begin(void *obj) {
   (void)obj;
@@ -457,7 +459,10 @@ void *list_begin(void *obj) {
     printf("[list][begin]\n");
   }
 
-  return NULL;
+  struct list *lst = obj;
+  struct list_node *c = lst->front->next;
+
+  return ag_std_new(list_iter, c);
 }
 
 void *list_end(void *obj) {
@@ -466,8 +471,10 @@ void *list_end(void *obj) {
   if (DEBUG_MSG) {
     printf("[list][end]\n");
   }
+  struct list *lst = obj;
+  struct list_node *c = lst->front->next;
 
-  return NULL;
+  return ag_std_new(list_iter, c);
 }
 
 void list_push_front(void *lst_arg, void *obj) {
@@ -655,6 +662,128 @@ void *ag_std_end(void *obj) {
   return cvt->end(obj);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// iterator_vtable (derived from vtable)
+///////////////////////////////////////////////////////////////////////////////
+struct iterator_vtable {
+  struct ag_std_vtable vt;
+
+  void (*increment)(void *);
+  void *(*deref)(void *);
+  int (*not_equal)(void *, void *);
+};
+
+// Forward declare these so that the iterator_vtable_ctor has them.
+void ag_std_iter_increment(void *obj);
+void *ag_std_iter_deref(void *obj);
+int ag_std_iter_not_equal(void *obj_a, void *obj_b);
+
+void *iterator_vtable_ctor(void *obj, va_list *app) {
+
+  // Run the parent ctor using super.
+  // We don't need to keep track of who the parent is.
+  struct iterator_vtable *iter_vt = NULL;
+  struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
+  if (super->ctor == NULL) {
+    printf("super ctor is null??\n");
+  } else {
+    iter_vt = super->ctor(obj, app);
+  }
+
+  if (DEBUG_MSG) {
+    printf("[iterator_vtable][ctor]\n");
+  }
+
+  // Assign the container begin and end functions.
+  va_list ap = *app;
+
+  void *f = va_arg(ap, void *);
+
+  while (f != NULL) {
+    void *g = va_arg(ap, void *);
+    if (f == ag_std_iter_increment) {
+      iter_vt->increment = g;
+    } else if (f == ag_std_iter_deref) {
+      iter_vt->deref = g;
+    } else if (f == ag_std_iter_not_equal) {
+      iter_vt->not_equal = g;
+    }
+
+    f = va_arg(ap, void *);
+  }
+
+  return obj;
+}
+
+void iterator_vtable_dtor(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[iterator_vtable][dtor]\n");
+  }
+}
+
+void ag_std_iter_increment(void *obj) {
+  struct iterator_vtable *ivt = *(struct iterator_vtable **)obj;
+  return ivt->increment(obj);
+}
+
+void *ag_std_iter_deref(void *obj) {
+  struct iterator_vtable *ivt = *(struct iterator_vtable **)obj;
+  return ivt->deref(obj);
+}
+
+int ag_std_iter_not_equal(void *obj_a, void *obj_b) {
+  struct iterator_vtable *ivt = *(struct iterator_vtable **)obj_a;
+  return ivt->not_equal(obj_a, obj_b);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// list_iter (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct list_iter {
+  struct object obj;
+  struct list_node *c;
+};
+
+void *list_iter_ctor(void *obj, va_list *app) {
+  // TODO
+  // Need to call the super ctor.
+
+  struct list_iter *li = obj;
+  li->c = va_arg(*app, struct list_node *);
+
+  return obj;
+}
+
+void list_iter_dtor(void *obj) {
+  // TODO
+  (void)obj;
+}
+
+void list_iter_print(void *obj) {
+  (void)obj;
+  printf("[list_iter][print]");
+}
+
+void list_iter_increment(void *obj) {
+  struct list_iter *li = obj;
+  li->c = li->c->next;
+}
+
+void *list_iter_deref(void *obj) {
+  struct list_iter *li = obj;
+  return li->c;
+}
+
+int list_iter_not_equal(void *obj_a, void *obj_b) {
+  struct list_iter *a = obj_a;
+  struct list_iter *b = obj_b;
+
+  return a->c != b->c;
+}
+
 int main(void) {
 
   struct ag_std_vtable vtable_vt = {
@@ -697,6 +826,27 @@ int main(void) {
       ag_std_begin, vector_begin,
       ag_std_end, vector_end,
       ag_std_print, vector_print,
+      0);
+
+  void *iterator_vtable = ag_std_new(
+      vtable,               // The type of the object.
+      "iterator_vtable",   // The name of the object.
+      vtable,               // The superclass.
+      sizeof(struct iterator_vtable),  // The size of the structure...
+      ag_std_new, iterator_vtable_ctor,
+      0);
+
+  // The list_iter symbol must exist outside of the main function, because
+  // the list_begin and list_end functions create iterators.
+  list_iter = ag_std_new(
+      iterator_vtable,
+      "list_iter",
+      object,
+      sizeof(struct list_iter),
+      ag_std_new, list_iter_ctor,
+      ag_std_iter_increment, list_iter_increment,
+      ag_std_iter_deref, list_iter_deref,
+      ag_std_iter_not_equal, list_iter_not_equal,
       0);
 
   void *lst = ag_std_new(list);
