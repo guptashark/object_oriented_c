@@ -472,7 +472,7 @@ void *list_end(void *obj) {
     printf("[list][end]\n");
   }
   struct list *lst = obj;
-  struct list_node *c = lst->front->next;
+  struct list_node *c = lst->back;
 
   return ag_std_new(list_iter, c);
 }
@@ -748,6 +748,10 @@ struct list_iter {
 };
 
 void *list_iter_ctor(void *obj, va_list *app) {
+  if (DEBUG_MSG) {
+    printf("[list_iter_ctor]\n");
+  }
+
   // TODO
   // Need to call the super ctor.
 
@@ -768,16 +772,27 @@ void list_iter_print(void *obj) {
 }
 
 void list_iter_increment(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[list_iter_inc]\n");
+  }
   struct list_iter *li = obj;
   li->c = li->c->next;
 }
 
 void *list_iter_deref(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[list_iter_deref]\n");
+  }
+
   struct list_iter *li = obj;
-  return li->c;
+  return li->c->obj;
 }
 
 int list_iter_not_equal(void *obj_a, void *obj_b) {
+  if (DEBUG_MSG) {
+    printf("[list_iter_neq]\n");
+  }
+
   struct list_iter *a = obj_a;
   struct list_iter *b = obj_b;
 
@@ -854,8 +869,6 @@ int main(void) {
   ag_std_print(lst);
   printf("\n");
   assert(ag_std_class_of(lst) == list);
-  ag_std_begin(lst);
-  ag_std_end(lst);
 
   void *v = ag_std_new(vector);
   ag_std_print(v);
@@ -919,6 +932,21 @@ int main(void) {
   list_push_back(lst, i3);
   list_push_back(lst, i4);
   list_push_back(lst, ag_std_new(floating, 5.3));
+
+  {
+    printf("{ ");
+    void *it = list_begin(lst);
+    void *lst_end = list_end(lst);
+    (void)lst_end;
+
+    while (ag_std_iter_not_equal(it, lst_end)) {
+      ag_std_print(ag_std_iter_deref(it));
+      printf(" ");
+      ag_std_iter_increment(it);
+    }
+
+    printf(" }\n");
+  }
 
   ag_std_print(lst);
   printf("\n");
