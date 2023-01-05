@@ -496,22 +496,34 @@ void list_push_back(void *lst_arg, void *obj) {
 // vector (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
+/* Our vector will (at the moment) allow for any kind of object to be
+ * inserted into it, not just objects of a specific type, (though we can
+ * technically enforce this by providing the allowed type during
+ * the construction, ie: void *v = ag_std_new(vector, integer),
+ * at which point every insert will do a check to ensure that the object
+ * being inserted is in fact of type integer.
+ */
 struct vector {
   struct object obj;
 
-  // We can lengthen as needed with other fields,
-  // but this is an abstract class, so children of this class will
-  // use the begin and end methods.
+  void **arr;
+  size_t size;
+  size_t capacity;
 };
 
 void *vector_ctor(void *obj, va_list *app) {
   // does nothing.
-  (void)obj;
   (void)app;
 
   if (DEBUG_MSG) {
     printf("[vector][ctor]\n");
   }
+
+  struct vector *v = obj;
+
+  v->arr = malloc(sizeof(void *) * 8);
+  v->size = 0;
+  v->capacity = 8;
 
   return obj;
 }
@@ -522,6 +534,8 @@ void vector_dtor(void *obj) {
   if (DEBUG_MSG) {
     printf("[vector][dtor]\n");
   }
+
+  // TODO: Free the data.
 }
 
 void vector_print(void *obj) {
@@ -530,6 +544,22 @@ void vector_print(void *obj) {
   if (DEBUG_MSG) {
     printf("[vector][print]\n");
   }
+
+  struct vector *v = obj;
+
+  if (v->size == 0) {
+    printf("vector([])");
+    return;
+  }
+
+  printf("vector([");
+  for (size_t i = 0; i < v->size - 1; ++i) {
+    ag_std_print(v->arr[i]);
+    printf(", ");
+  }
+
+  ag_std_print(v->arr[v->size - 1]);
+  printf("])");
 }
 
 void *vector_begin(void *obj) {
@@ -550,6 +580,13 @@ void *vector_end(void *obj) {
   }
 
   return NULL;
+}
+
+void vector_push_back(void *vec_arg, void *obj) {
+  struct vector *v = vec_arg;
+
+  v->arr[v->size] = obj;
+  v->size++;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -659,6 +696,7 @@ int main(void) {
       ag_std_new, vector_ctor,
       ag_std_begin, vector_begin,
       ag_std_end, vector_end,
+      ag_std_print, vector_print,
       0);
 
   void *lst = ag_std_new(list);
@@ -769,6 +807,23 @@ int main(void) {
     list_push_back(lst_final, lst_c);
 
     ag_std_print(lst_final);
+    printf("\n");
+  }
+
+  {
+    void *ai = ag_std_new(integer, 10);
+    void *bi = ag_std_new(integer, 20);
+    void *cs = ag_std_new(string, "thirty");
+
+    void *v = ag_std_new(vector);
+    ag_std_print(v);
+    printf("\n");
+
+    vector_push_back(v, ai);
+    vector_push_back(v, bi);
+    vector_push_back(v, cs);
+
+    ag_std_print(v);
     printf("\n");
   }
 
