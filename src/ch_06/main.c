@@ -450,6 +450,8 @@ void list_print(void *obj) {
 }
 
 // TODO: Remove this from the global namespace... somehow.
+// Had to put this here so list_begin and end would know the type of
+// object to create.
 void *list_iter;
 
 void *list_begin(void *obj) {
@@ -569,14 +571,19 @@ void vector_print(void *obj) {
   printf("])");
 }
 
+// TODO: Remove this from the global namespace... somehow.
+// Had to put this here so vec_begin and vec_end would know the type of
+// object to create.
+void *vec_iter;
+
 void *vector_begin(void *obj) {
-  (void)obj;
 
   if (DEBUG_MSG) {
     printf("[vector][begin]\n");
   }
 
-  return NULL;
+  struct vector *v = obj;
+  return ag_std_new(vec_iter, v->arr, 0);
 }
 
 void *vector_end(void *obj) {
@@ -586,7 +593,8 @@ void *vector_end(void *obj) {
     printf("[vector][end]\n");
   }
 
-  return NULL;
+  struct vector *v = obj;
+  return ag_std_new(vec_iter, v->arr, v->size);
 }
 
 void vector_push_back(void *vec_arg, void *obj) {
@@ -799,6 +807,74 @@ int list_iter_not_equal(void *obj_a, void *obj_b) {
   return a->c != b->c;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// vec_iter (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct vec_iter {
+  struct object obj;
+
+  void **arr;
+  size_t i;
+};
+
+void *vec_iter_ctor(void *obj, va_list *app) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_ctor]\n");
+  }
+
+  // TODO
+  // Need to call the super ctor.
+
+  struct vec_iter *vi = obj;
+  vi->arr = va_arg(*app, void **);
+  vi->i = va_arg(*app, size_t);
+
+  return obj;
+}
+
+void vec_iter_dtor(void *obj) {
+  // TODO
+  (void)obj;
+}
+
+void vec_iter_print(void *obj) {
+  (void)obj;
+  printf("[vec_iter][print]");
+}
+
+void vec_iter_increment(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_inc]\n");
+  }
+  struct vec_iter *vi = obj;
+  vi->i++;
+}
+
+void *vec_iter_deref(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_deref]\n");
+  }
+
+  struct vec_iter *vi = obj;
+  return vi->arr[vi->i];
+}
+
+int vec_iter_not_equal(void *obj_a, void *obj_b) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_neq]\n");
+  }
+
+  struct vec_iter *a = obj_a;
+  struct vec_iter *b = obj_b;
+
+  return a->i != b->i;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// main
+///////////////////////////////////////////////////////////////////////////////
+
 int main(void) {
 
   struct ag_std_vtable vtable_vt = {
@@ -864,6 +940,17 @@ int main(void) {
       ag_std_iter_not_equal, list_iter_not_equal,
       0);
 
+  vec_iter = ag_std_new(
+      iterator_vtable,
+      "vec_iter",
+      object,
+      sizeof(struct vec_iter),
+      ag_std_new, vec_iter_ctor,
+      ag_std_iter_increment, vec_iter_increment,
+      ag_std_iter_deref, vec_iter_deref,
+      ag_std_iter_not_equal, vec_iter_not_equal,
+      0);
+
   void *lst = ag_std_new(list);
 
   ag_std_print(lst);
@@ -874,8 +961,6 @@ int main(void) {
   ag_std_print(v);
   printf("\n");
   assert(ag_std_class_of(v) == vector);
-  ag_std_begin(v);
-  ag_std_end(v);
 
   /*
   void *obj = ag_std_new(object);
@@ -934,6 +1019,7 @@ int main(void) {
   list_push_back(lst, ag_std_new(floating, 5.3));
 
   {
+    printf("Printing this with a list iterator: ");
     printf("{ ");
     void *it = list_begin(lst);
     void *lst_end = list_end(lst);
@@ -945,7 +1031,7 @@ int main(void) {
       ag_std_iter_increment(it);
     }
 
-    printf(" }\n");
+    printf("}\n");
   }
 
   ag_std_print(lst);
@@ -1003,6 +1089,21 @@ int main(void) {
 
     ag_std_print(v);
     printf("\n");
+
+    {
+      printf("Printing this with a vec iterator: ");
+      printf("{ ");
+      void *it = vector_begin(v);
+      void *vec_end = vector_end(v);
+
+      while (ag_std_iter_not_equal(it, vec_end)) {
+        ag_std_print(ag_std_iter_deref(it));
+        printf(" ");
+        ag_std_iter_increment(it);
+      }
+
+      printf("}\n");
+    }
   }
 
   /*
