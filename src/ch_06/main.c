@@ -977,6 +977,8 @@ int main(void) {
       ag_std_iter_not_equal, list_iter_not_equal,
       0);
 
+  // The vec iter symbol must also exist outside of the main fn,
+  // becuase vec_begin and vec_end functions create iterators.
   vec_iter = ag_std_new(
       iterator_vtable,
       "vec_iter",
@@ -986,6 +988,36 @@ int main(void) {
       ag_std_iter_increment, vec_iter_increment,
       ag_std_iter_deref, vec_iter_deref,
       ag_std_iter_not_equal, vec_iter_not_equal,
+      0);
+
+  void *integer = ag_std_new(
+      vtable,     // The type of object we are creating.
+      "integer",  // The name of the object. (integer type)
+      object,     // The superclass.
+      sizeof(struct integer),       // The size of the integer structure.
+      ag_std_print, integer_print,  // The method of obj that we override.
+      ag_std_new, integer_ctor,
+      ag_std_delete, integer_dtor,
+      0);
+
+  void *floating = ag_std_new(
+      vtable,     // The type of the object we're creating.
+      "floating", // The name of the object. (floating type)
+      object,     // The superclass.
+      sizeof(struct floating),      // The size of the floating struct
+      ag_std_print, floating_print,
+      ag_std_delete, floating_dtor,
+      ag_std_new, floating_ctor,
+      0);
+
+  void *string = ag_std_new(
+      vtable,
+      "string",
+      object,
+      sizeof(struct string),
+      ag_std_print, string_print,
+      ag_std_delete, string_dtor,
+      ag_std_new, string_ctor,
       0);
 
   void *lst = ag_std_new(list);
@@ -999,54 +1031,12 @@ int main(void) {
   printf("\n");
   assert(ag_std_class_of(v) == vector);
 
-  /*
-  void *obj = ag_std_new(object);
-  ag_std_print(obj);
-  */
-
-  void *integer = ag_std_new(
-      vtable,     // The type of object we are creating.
-      "integer",  // The name of the object. (integer type)
-      object,     // The superclass.
-      sizeof(struct integer),       // The size of the integer structure.
-      ag_std_print, integer_print,  // The method of obj that we override.
-      ag_std_new, integer_ctor,
-      ag_std_delete, integer_dtor,
-      0);
-
-
-  void *floating = ag_std_new(
-      vtable,     // The type of the object we're creating.
-      "floating", // The name of the object. (floating type)
-      object,     // The superclass.
-      sizeof(struct floating),      // The size of the floating struct
-      ag_std_print, floating_print,
-      ag_std_delete, floating_dtor,
-      ag_std_new, floating_ctor,
-      0);
-
-
-  void *string = ag_std_new(
-      vtable,
-      "string",
-      object,
-      sizeof(struct string),
-      ag_std_print, string_print,
-      ag_std_delete, string_dtor,
-      ag_std_new, string_ctor,
-      0);
-
   void *s1 = ag_std_new(string, "Dumbledore");
 
   void *i = ag_std_new(integer, 4);
   void *i2 = ag_std_new(integer, 7);
   void *i3 = ag_std_new(integer, 1);
   void *i4 = ag_std_new(integer, -3);
-
-  /*
-  void *d = ag_std_new(floating, 4.5);
-  void *s = ag_std_new(string, "Hello World");
-  */
 
   list_push_back(lst, i);
   list_push_back(lst, i2);
@@ -1160,27 +1150,11 @@ int main(void) {
       } else {
         printf("Find function failed!\n");
       }
-
-
     }
   }
 
-  /*
-  ag_std_print(d);
-  ag_std_print(s);
-  */
-
   void *class_of_i = ag_std_class_of(i);
-  /*
-  void *class_of_d = ag_std_class_of(d);
-  void *class_of_s = ag_std_class_of(s);
-  */
-
   assert(class_of_i == integer);
-  /*
-  assert(class_of_d == floating);
-  assert(class_of_s == string);
-  */
 
   return 0;
 }
