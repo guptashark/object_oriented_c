@@ -1136,20 +1136,12 @@ int main(void) {
       ag_std_range_print(v);
 
       int found = ag_std_range_find(v, bi);
-      if (found) {
-        printf("Find function works!\n");
-      } else {
-        printf("Find function failed.\n");
-      }
+      assert(found == 1);
 
       void *z = ag_std_new(integer, 0);
 
       found = ag_std_range_find(v, z);
-      if (found == 0) {
-        printf("Find function works!\n");
-      } else {
-        printf("Find function failed!\n");
-      }
+      assert(found == 0);
     }
   }
 
