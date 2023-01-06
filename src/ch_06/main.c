@@ -871,6 +871,9 @@ int vec_iter_not_equal(void *obj_a, void *obj_b) {
   return a->i != b->i;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// range functions
+///////////////////////////////////////////////////////////////////////////////
 void ag_std_range_print(void *rng) {
 
   void *it = ag_std_begin(rng);
@@ -886,6 +889,23 @@ void ag_std_range_print(void *rng) {
   }
 
   printf(")\n");
+}
+
+int ag_std_range_find(void *rng, void *val) {
+
+  void *it = ag_std_begin(rng);
+  void *end = ag_std_end(rng);
+
+  while (ag_std_iter_not_equal(it, end)) {
+    void *obj = ag_std_iter_deref(it);
+    if (obj == val) {
+      return 1;
+    }
+
+    ag_std_iter_increment(it);
+  }
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1124,6 +1144,24 @@ int main(void) {
       printf("}\n");
 
       ag_std_range_print(v);
+
+      int found = ag_std_range_find(v, bi);
+      if (found) {
+        printf("Find function works!\n");
+      } else {
+        printf("Find function failed.\n");
+      }
+
+      void *z = ag_std_new(integer, 0);
+
+      found = ag_std_range_find(v, z);
+      if (found == 0) {
+        printf("Find function works!\n");
+      } else {
+        printf("Find function failed!\n");
+      }
+
+
     }
   }
 
