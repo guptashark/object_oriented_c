@@ -391,6 +391,56 @@ int string_cmp(void *obj_a, void *obj_b) {
   return 0;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Pair (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct ag_std_pair {
+  struct object obj; // base
+
+  void *first;
+  void *second;
+};
+
+void *ag_std_pair_ctor(void *obj, va_list *app) {
+  struct ag_std_pair *p = (struct ag_std_pair *)obj;
+  p->first = va_arg(*app, void *);
+  p->second = va_arg(*app, void *);
+
+  return obj;
+}
+
+void ag_std_pair_dtor(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_pair][dtor]\n");
+  }
+}
+
+void ag_std_pair_print(void *obj) {
+  struct ag_std_pair *p = obj;
+  // struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
+  // printf("[%s][print][%s]\n", vt->name, str_obj->s);
+  printf("(");
+  ag_std_print(p->first);
+  printf(", ");
+  ag_std_print(p->second);
+  printf(")");
+}
+
+int ag_std_pair_cmp(void *obj_a, void *obj_b) {
+  struct ag_std_pair *a = obj_a;
+  struct ag_std_pair *b = obj_b;
+
+  (void)a;
+  (void)b;
+  // TODO
+  // Need to actually implement this but do it later.
+  return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // list (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
@@ -1050,6 +1100,17 @@ int main(void) {
       ag_std_iter_not_equal, vec_iter_not_equal,
       0);
 
+  void *ag_std_pair = ag_std_new(
+      vtable,
+      "pair",
+      object,
+      sizeof(struct ag_std_pair),
+      ag_std_new, ag_std_pair_ctor,
+      ag_std_delete, ag_std_pair_dtor,
+      ag_std_print, ag_std_pair_print,
+      ag_std_cmp, ag_std_pair_cmp,
+      0);
+
   void *integer = ag_std_new(
       vtable,     // The type of object we are creating.
       "integer",  // The name of the object. (integer type)
@@ -1100,6 +1161,11 @@ int main(void) {
   void *i2 = ag_std_new(integer, 7);
   void *i3 = ag_std_new(integer, 1);
   void *i4 = ag_std_new(integer, -3);
+
+  void *p1 = ag_std_new(ag_std_pair, i2, i3);
+  printf("Printing the pair: ");
+  ag_std_print(p1);
+  printf("\n");
 
   list_push_back(lst, i);
   list_push_back(lst, i2);
