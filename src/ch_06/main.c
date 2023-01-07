@@ -441,6 +441,17 @@ int ag_std_pair_cmp(void *obj_a, void *obj_b) {
   return 0;
 }
 
+// Specialized functions - first and second.
+void *ag_std_pair_first(void *obj) {
+  struct ag_std_pair *p = obj;
+  return p->first;
+}
+
+void *ag_std_pair_second(void *obj) {
+  struct ag_std_pair *p = obj;
+  return p->second;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // list (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
@@ -1166,6 +1177,14 @@ int main(void) {
   printf("Printing the pair: ");
   ag_std_print(p1);
   printf("\n");
+  {
+    void *first = ag_std_pair_first(p1);
+    void *second = ag_std_pair_second(p1);
+    ag_std_print(first);
+    printf("\n");
+    ag_std_print(second);
+    printf("\n");
+  }
 
   list_push_back(lst, i);
   list_push_back(lst, i2);
