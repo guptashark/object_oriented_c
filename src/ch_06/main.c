@@ -29,6 +29,7 @@ struct ag_std_vtable {
   void *(*ctor)(void *, va_list *);
   void (*dtor)(void *);
   void (*print)(void *);
+  int (*cmp)(void *, void *);
 };
 
 // Object functions.
@@ -61,6 +62,14 @@ void object_print(void *obj) {
   printf("[%s][%p]", vt->name, obj);
 }
 
+int object_cmp(void *obj_a, void *obj_b) {
+  if (obj_a == obj_b) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 // The vtable of an object.
 struct ag_std_vtable object_vt = {
   // object struct.
@@ -69,7 +78,8 @@ struct ag_std_vtable object_vt = {
   sizeof(struct object), // How come this doesn't work?
   object_ctor,
   object_dtor,
-  object_print
+  object_print,
+  object_cmp
 };
 
 // The ptr to a vtable of an object.
@@ -81,6 +91,7 @@ const struct ag_std_vtable *object = &object_vt;
 void *ag_std_new(const struct ag_std_vtable *vt, ...);
 void ag_std_delete(void *);
 void ag_std_print(void *);
+int ag_std_cmp(void *, void *);
 
 // Vtable functions, which we may not need right now.
 void *vtable_ctor(void *obj, va_list *app) {
@@ -128,6 +139,8 @@ void *vtable_ctor(void *obj, va_list *app) {
       self->dtor = g;
     } else if (f == ag_std_print) {
       self->print = g;
+    } else if (f == ag_std_cmp) {
+      self->cmp = g;
     }
 
     f = va_arg(ap, void *);
@@ -144,6 +157,10 @@ void vtable_dtor(void *obj) {
 void vtable_print(void *obj) {
   // TODO: Implement this.
   (void)obj;
+}
+
+int vtable_cmp(void *obj_a, void *obj_b) {
+  return obj_a != obj_b;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -185,6 +202,11 @@ void ag_std_print(void *obj) {
   vt->print(obj);
 }
 
+int ag_std_cmp(void *obj_a, void *obj_b) {
+  struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj_a;
+  return vt->cmp(obj_a, obj_b);
+}
+
 // Return the vtable (class descriptor) of this object.
 void *ag_std_class_of(void *obj) {
   // every possible object derives from object - so...
@@ -198,7 +220,6 @@ void *ag_std_super(void *obj) {
   struct object *self = (struct object *)obj;
   return self->vt->super;
 }
-
 
 /*
 size_t ag_std_sizeof(void *obj) {
@@ -273,6 +294,13 @@ void integer_print(void *obj) {
   printf("%d", i->x);
 }
 
+int integer_cmp(void *obj_a, void *obj_b) {
+  struct integer *a = (struct integer *)obj_a;
+  struct integer *b = (struct integer *)obj_b;
+
+  return a->x - b->x;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Float (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
@@ -307,6 +335,13 @@ void floating_print(void *obj) {
   // struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
   // printf("[%s][print][%f]\n", vt->name, i->x);
   printf("%.2f", i->x);
+}
+
+int floating_cmp(void *obj_a, void *obj_b) {
+  struct floating *a = (struct floating *)obj_a;
+  struct floating *b = (struct floating *)obj_b;
+
+  return a->x - b->x;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -344,6 +379,17 @@ void string_print(void *obj) {
   // struct ag_std_vtable *vt = *(struct ag_std_vtable **)obj;
   // printf("[%s][print][%s]\n", vt->name, str_obj->s);
   printf("\"%s\"", str_obj->s);
+}
+
+int string_cmp(void *obj_a, void *obj_b) {
+  struct string *a = (struct string *)obj_a;
+  struct string *b = (struct string *)obj_b;
+
+  (void)a;
+  (void)b;
+  // TODO
+  // Need to actually implement this but do it later.
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -447,6 +493,18 @@ void list_print(void *obj) {
     ag_std_print(c->obj);
     printf("]");
   }
+}
+
+int list_cmp(void *obj_a, void *obj_b) {
+  struct list *a = (struct list *)obj_a;
+  struct list *b = (struct list *)obj_b;
+
+  (void)a;
+  (void)b;
+
+  // TODO
+  // Need to actually implement this but do it later.
+  return 0;
 }
 
 // TODO: Remove this from the global namespace... somehow.
@@ -898,7 +956,7 @@ int ag_std_range_find(void *rng, void *val) {
 
   while (ag_std_iter_not_equal(it, end)) {
     void *obj = ag_std_iter_deref(it);
-    if (obj == val) {
+    if (ag_std_cmp(obj, val) == 0) {
       return 1;
     }
 
@@ -921,7 +979,8 @@ int main(void) {
     sizeof(struct ag_std_vtable),
     vtable_ctor,
     vtable_dtor,
-    vtable_print
+    vtable_print,
+    vtable_cmp
   };
 
   const struct ag_std_vtable *vtable = &vtable_vt;
@@ -943,6 +1002,7 @@ int main(void) {
       ag_std_begin, list_begin,
       ag_std_end, list_end,
       ag_std_print, list_print,
+      ag_std_cmp, list_cmp,
       0);
 
   void *vector = ag_std_new(
@@ -998,6 +1058,7 @@ int main(void) {
       ag_std_print, integer_print,  // The method of obj that we override.
       ag_std_new, integer_ctor,
       ag_std_delete, integer_dtor,
+      ag_std_cmp, integer_cmp,
       0);
 
   void *floating = ag_std_new(
@@ -1008,6 +1069,7 @@ int main(void) {
       ag_std_print, floating_print,
       ag_std_delete, floating_dtor,
       ag_std_new, floating_ctor,
+      ag_std_cmp, floating_cmp,
       0);
 
   void *string = ag_std_new(
@@ -1018,6 +1080,7 @@ int main(void) {
       ag_std_print, string_print,
       ag_std_delete, string_dtor,
       ag_std_new, string_ctor,
+      ag_std_cmp, string_cmp,
       0);
 
   void *lst = ag_std_new(list);
