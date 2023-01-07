@@ -297,7 +297,6 @@ void integer_print(void *obj) {
 int integer_cmp(void *obj_a, void *obj_b) {
   struct integer *a = (struct integer *)obj_a;
   struct integer *b = (struct integer *)obj_b;
-
   return a->x - b->x;
 }
 
@@ -956,6 +955,7 @@ int ag_std_range_find(void *rng, void *val) {
 
   while (ag_std_iter_not_equal(it, end)) {
     void *obj = ag_std_iter_deref(it);
+
     if (ag_std_cmp(obj, val) == 0) {
       return 1;
     }
@@ -1169,7 +1169,7 @@ int main(void) {
   {
     void *ai = ag_std_new(integer, 10);
     void *bi = ag_std_new(integer, 20);
-    void *cs = ag_std_new(string, "thirty");
+    void *ci = ag_std_new(integer, 30);
 
     void *v = ag_std_new(vector);
     ag_std_print(v);
@@ -1177,7 +1177,7 @@ int main(void) {
 
     vector_push_back(v, ai);
     vector_push_back(v, bi);
-    vector_push_back(v, cs);
+    vector_push_back(v, ci);
 
     ag_std_print(v);
     printf("\n");
