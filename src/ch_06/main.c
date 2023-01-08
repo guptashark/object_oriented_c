@@ -723,6 +723,81 @@ void vector_push_back(void *vec_arg, void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// iota_view
+///////////////////////////////////////////////////////////////////////////////
+
+struct ag_std_iota_view {
+  struct object obj;
+  int size;
+};
+
+void *ag_std_iota_view_ctor(void *obj, va_list *app) {
+  // does nothing.
+  (void)app;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_iota_view][ctor]\n");
+  }
+
+  struct ag_std_iota_view *v = obj;
+
+  // TODO: Should this be... an integer object?
+  // For now, we can do this, but later it might be better
+  // to instead use the integer object.
+
+  // TODO: Call the parent ctor.
+  v->size = va_arg(*app, int);
+
+  return obj;
+}
+
+void ag_std_iota_view_dtor(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_iota_view][dtor]\n");
+  }
+
+  // TODO: Free the data.
+}
+
+void ag_std_iota_view_print(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_iota_view][print]\n");
+  }
+
+  struct ag_std_iota_view *iv = obj;
+  printf("ag_std_iota_view(%d)", iv->size);
+}
+
+// TODO: Remove this from the global namespace... somehow.
+// Had to put this here so vec_begin and vec_end would know the type of
+// object to create.
+void *ag_std_iota_view_iter;
+
+void *ag_std_iota_view_begin(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_iota_view][begin]\n");
+  }
+
+  // We don't even need to reference the obj.
+  return ag_std_new(ag_std_iota_view_iter, 0);
+}
+
+void *ag_std_iota_view_end(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_iota_view][end]\n");
+  }
+
+  struct ag_std_iota_view *iv = obj;
+  return ag_std_new(ag_std_iota_view_iter, iv->size);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // container_vtable (derived from vtable)
 ///////////////////////////////////////////////////////////////////////////////
 struct container_vtable {
@@ -990,6 +1065,71 @@ int vec_iter_not_equal(void *obj_a, void *obj_b) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ag_std_iota_view_iter (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct ag_std_iota_view_iter {
+  struct object obj;
+  int i;
+};
+
+void *ag_std_iota_view_iter_ctor(void *obj, va_list *app) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_ctor]\n");
+  }
+
+  // TODO
+  // Need to call the super ctor.
+
+  struct ag_std_iota_view_iter *vi = obj;
+  vi->i = va_arg(*app, int);
+
+  return obj;
+}
+
+void ag_std_iota_view_iter_dtor(void *obj) {
+  // TODO
+  (void)obj;
+}
+
+void ag_std_iota_view_iter_print(void *obj) {
+  (void)obj;
+  printf("[ag_std_iota_view_iter][print]");
+}
+
+void ag_std_iota_view_iter_increment(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_inc]\n");
+  }
+  struct ag_std_iota_view_iter *vi = obj;
+  vi->i++;
+}
+
+// TODO: Get rid of this when we can.
+// This needs to be forward declared
+void *integer;
+
+void *ag_std_iota_view_iter_deref(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_deref]\n");
+  }
+
+  struct ag_std_iota_view_iter *vi = obj;
+  return ag_std_new(integer, vi->i);
+}
+
+int ag_std_iota_view_iter_not_equal(void *obj_a, void *obj_b) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_neq]\n");
+  }
+
+  struct ag_std_iota_view_iter *a = obj_a;
+  struct ag_std_iota_view_iter *b = obj_b;
+
+  return a->i != b->i;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // range functions
 ///////////////////////////////////////////////////////////////////////////////
 void ag_std_range_print(void *rng) {
@@ -1111,6 +1251,19 @@ int main(void) {
       ag_std_iter_not_equal, vec_iter_not_equal,
       0);
 
+  // The ag_std_iota_view_iter symbol must also exist outside of the main fn,
+  // becuase vec_begin and vec_end functions create iterators.
+  ag_std_iota_view_iter = ag_std_new(
+      iterator_vtable,
+      "ag_std_iota_view_iter",
+      object,
+      sizeof(struct ag_std_iota_view_iter),
+      ag_std_new, ag_std_iota_view_iter_ctor,
+      ag_std_iter_increment, ag_std_iota_view_iter_increment,
+      ag_std_iter_deref, ag_std_iota_view_iter_deref,
+      ag_std_iter_not_equal, ag_std_iota_view_iter_not_equal,
+      0);
+
   void *ag_std_pair = ag_std_new(
       vtable,
       "pair",
@@ -1122,7 +1275,9 @@ int main(void) {
       ag_std_cmp, ag_std_pair_cmp,
       0);
 
-  void *integer = ag_std_new(
+  // This is not created in the main function, since some functions
+  // return an integer object.
+  integer = ag_std_new(
       vtable,     // The type of object we are creating.
       "integer",  // The name of the object. (integer type)
       object,     // The superclass.
