@@ -798,6 +798,95 @@ void *ag_std_iota_view_end(void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ag_std_zip_view
+///////////////////////////////////////////////////////////////////////////////
+
+
+struct ag_std_zip_view {
+  struct object obj;
+
+  // The first and second range.
+  void *rng_a;
+  void *rng_b;
+};
+
+void *ag_std_zip_view_ctor(void *obj, va_list *app) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_zip_view][ctor]\n");
+  }
+
+  struct ag_std_zip_view *v = obj;
+
+  // TODO: Call the parent ctor.
+  v->rng_a = va_arg(*app, void *);
+  v->rng_b = va_arg(*app, void *);
+
+  return obj;
+}
+
+void ag_std_zip_view_dtor(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_zip_view][dtor]\n");
+  }
+
+  // TODO: Free the data.
+}
+
+void ag_std_zip_view_print(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_zip_view][print]\n");
+  }
+
+  // TODO: Some actual printing?
+  // struct ag_std_zip_view *iv = obj;
+}
+
+// TODO: Remove this from the global namespace... somehow.
+// Had to put this here so vec_begin and vec_end would know the type of
+// object to create.
+void *ag_std_zip_view_iter;
+void *ag_std_pair;
+
+// Forward declare these so that the zip_view_begin has them.
+void *ag_std_begin(void *obj);
+void *ag_std_end(void *obj);
+
+void *ag_std_zip_view_begin(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_zip_view][begin]\n");
+  }
+
+  struct ag_std_zip_view *v = obj;
+  void *it_a = ag_std_begin(v->rng_a);
+  void *it_b = ag_std_begin(v->rng_b);
+
+  void *p = ag_std_new(ag_std_pair, it_a, it_b);
+
+  return ag_std_new(ag_std_zip_view_iter, p);
+}
+
+void *ag_std_zip_view_end(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_zip_view][end]\n");
+  }
+
+  struct ag_std_zip_view *v = obj;
+  void *it_a = ag_std_end(v->rng_a);
+  void *it_b = ag_std_end(v->rng_b);
+
+  void *p = ag_std_new(ag_std_pair, it_a, it_b);
+
+  return ag_std_new(ag_std_zip_view_iter, p);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // container_vtable (derived from vtable)
 ///////////////////////////////////////////////////////////////////////////////
 struct container_vtable {
@@ -1130,6 +1219,99 @@ int ag_std_iota_view_iter_not_equal(void *obj_a, void *obj_b) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ag_std_zip_view_iter (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+struct ag_std_zip_view_iter {
+  struct object obj;
+
+  // The pair object.
+  void *p;
+};
+
+void *ag_std_zip_view_iter_ctor(void *obj, va_list *app) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_ctor]\n");
+  }
+
+  // TODO
+  // Need to call the super ctor.
+
+  struct ag_std_zip_view_iter *vi = obj;
+  vi->p = va_arg(*app, void *);
+
+  return obj;
+}
+
+void ag_std_zip_view_iter_dtor(void *obj) {
+  // TODO actual implementation.
+  (void)obj;
+}
+
+void ag_std_zip_view_iter_print(void *obj) {
+  (void)obj;
+  printf("[ag_std_zip_view_iter][print]");
+}
+
+void ag_std_zip_view_iter_increment(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[zip_iter_inc]\n");
+  }
+
+  struct ag_std_zip_view_iter *zv = obj;
+  void *p = zv->p;
+  void *a = ag_std_pair_first(p);
+  void *b = ag_std_pair_second(p);
+
+  ag_std_iter_increment(a);
+  ag_std_iter_increment(b);
+}
+
+void *ag_std_zip_view_iter_deref(void *obj) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_deref]\n");
+  }
+
+  struct ag_std_zip_view_iter *zv = obj;
+
+  void *p = zv->p;
+  void *a = ag_std_pair_first(p);
+  void *b = ag_std_pair_second(p);
+
+  void *value_a = ag_std_iter_deref(a);
+  void *value_b = ag_std_iter_deref(b);
+
+  void *new_pair = ag_std_new(ag_std_pair, value_a, value_b);
+  return new_pair;
+}
+
+int ag_std_zip_view_iter_not_equal(void *obj_a, void *obj_b) {
+  if (DEBUG_MSG) {
+    printf("[vec_iter_neq]\n");
+  }
+
+  struct ag_std_zip_view_iter *a = obj_a;
+  struct ag_std_zip_view_iter *b = obj_b;
+
+  struct ag_std_pair *pa = a->p;
+  void *pa_01 = ag_std_pair_first(pa);
+  void *pa_02 = ag_std_pair_second(pa);
+
+  struct ag_std_pair *pb = b->p;
+  void *pb_01 = ag_std_pair_first(pb);
+  void *pb_02 = ag_std_pair_second(pb);
+
+  int res_01 = ag_std_iter_not_equal(pa_01, pb_01);
+  int res_02 = ag_std_iter_not_equal(pa_02, pb_02);
+
+  if (res_01 == 0 || res_02 == 0) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // range functions
 ///////////////////////////////////////////////////////////////////////////////
 void ag_std_range_print(void *rng) {
@@ -1228,6 +1410,17 @@ int main(void) {
       ag_std_print, ag_std_iota_view_print,
       0);
 
+  void *ag_std_zip_view = ag_std_new(
+      container_vtable,
+      "ag_std_zip_view",
+      object,
+      sizeof(struct ag_std_zip_view),
+      ag_std_new, ag_std_zip_view_ctor,
+      ag_std_begin, ag_std_zip_view_begin,
+      ag_std_end, ag_std_zip_view_end,
+      ag_std_print, ag_std_zip_view_print,
+      0);
+
   void *iterator_vtable = ag_std_new(
       vtable,               // The type of the object.
       "iterator_vtable",   // The name of the object.
@@ -1275,7 +1468,21 @@ int main(void) {
       ag_std_iter_not_equal, ag_std_iota_view_iter_not_equal,
       0);
 
-  void *ag_std_pair = ag_std_new(
+  // The ag_std_zip_view_iter symbol must also exist outside of the main fn,
+  // becuase zip_begin and zip_end functions create iterators.
+  ag_std_zip_view_iter = ag_std_new(
+      iterator_vtable,
+      "ag_std_zip_view_iter",
+      object,
+      sizeof(struct ag_std_zip_view_iter),
+      ag_std_new, ag_std_zip_view_iter_ctor,
+      ag_std_iter_increment, ag_std_zip_view_iter_increment,
+      ag_std_iter_deref, ag_std_zip_view_iter_deref,
+      ag_std_iter_not_equal, ag_std_zip_view_iter_not_equal,
+      0);
+
+  // This pointer must be declared outside so that zip can use it.
+  ag_std_pair = ag_std_new(
       vtable,
       "pair",
       object,
@@ -1478,6 +1685,36 @@ int main(void) {
 
     printf("\n");
   }
+
+  {
+    printf("Zip view test: ");
+
+    void *v = ag_std_new(vector);
+
+    vector_push_back(v, ag_std_new(string, "Harry"));
+    vector_push_back(v, ag_std_new(string, "Ron"));
+    vector_push_back(v, ag_std_new(string, "Hermione"));
+
+    void *iv = ag_std_new(ag_std_iota_view, 2);
+
+    void *zv = ag_std_new(ag_std_zip_view, v, iv);
+
+    void *it = ag_std_begin(zv);
+    void *end = ag_std_end(zv);
+
+    // int i = 0;
+    while (ag_std_iter_not_equal(it, end)) {
+      // The pair.
+      void *p = ag_std_iter_deref(it);
+      ag_std_print(p);
+      printf(" ");
+      ag_std_iter_increment(it);
+      // i++;
+    }
+
+    printf("\n");
+  }
+
 
   return 0;
 }
