@@ -1709,5 +1709,35 @@ int main(void) {
     printf("\n");
   }
 
+  {
+    printf("Zip view test v2: ");
+
+    void *v = ag_std_new(vector);
+
+    vector_push_back(v, ag_std_new(string, "Harry"));
+    vector_push_back(v, ag_std_new(string, "Ron"));
+    vector_push_back(v, ag_std_new(string, "Hermione"));
+
+    void *iv = ag_std_new(ag_std_iota_view, 2);
+
+    void *zv = ag_std_new(ag_std_zip_view, v, iv);
+
+    // void *it = ag_std_begin(zv);
+    void *end = ag_std_end(zv);
+
+    for (
+        void *it = ag_std_begin(zv);
+        ag_std_iter_not_equal(it, end);
+        ag_std_iter_increment(it))
+    {
+      // The pair.
+      void *p = ag_std_iter_deref(it);
+      ag_std_print(p);
+      printf(" ");
+    }
+
+    printf("\n");
+  }
+
   return 0;
 }
