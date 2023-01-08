@@ -1225,8 +1225,8 @@ int ag_std_iota_view_iter_not_equal(void *obj_a, void *obj_b) {
 struct ag_std_zip_view_iter {
   struct object obj;
 
-  // The pair object.
-  void *p;
+  // A pair of iters zipped together.
+  struct ag_std_pair *p;
 };
 
 void *ag_std_zip_view_iter_ctor(void *obj, va_list *app) {
@@ -1238,7 +1238,7 @@ void *ag_std_zip_view_iter_ctor(void *obj, va_list *app) {
   // Need to call the super ctor.
 
   struct ag_std_zip_view_iter *vi = obj;
-  vi->p = va_arg(*app, void *);
+  vi->p = va_arg(*app, struct ag_std_pair *);
 
   return obj;
 }
@@ -1259,9 +1259,8 @@ void ag_std_zip_view_iter_increment(void *obj) {
   }
 
   struct ag_std_zip_view_iter *zv = obj;
-  void *p = zv->p;
-  void *a = ag_std_pair_first(p);
-  void *b = ag_std_pair_second(p);
+  void *a = ag_std_pair_first(zv->p);
+  void *b = ag_std_pair_second(zv->p);
 
   ag_std_iter_increment(a);
   ag_std_iter_increment(b);
@@ -1274,9 +1273,8 @@ void *ag_std_zip_view_iter_deref(void *obj) {
 
   struct ag_std_zip_view_iter *zv = obj;
 
-  void *p = zv->p;
-  void *a = ag_std_pair_first(p);
-  void *b = ag_std_pair_second(p);
+  void *a = ag_std_pair_first(zv->p);
+  void *b = ag_std_pair_second(zv->p);
 
   void *value_a = ag_std_iter_deref(a);
   void *value_b = ag_std_iter_deref(b);
@@ -1290,16 +1288,14 @@ int ag_std_zip_view_iter_not_equal(void *obj_a, void *obj_b) {
     printf("[vec_iter_neq]\n");
   }
 
-  struct ag_std_zip_view_iter *a = obj_a;
-  struct ag_std_zip_view_iter *b = obj_b;
+  struct ag_std_zip_view_iter *zv_a = obj_a;
+  struct ag_std_zip_view_iter *zv_b = obj_b;
 
-  struct ag_std_pair *pa = a->p;
-  void *pa_01 = ag_std_pair_first(pa);
-  void *pa_02 = ag_std_pair_second(pa);
+  void *pa_01 = ag_std_pair_first(zv_a->p);
+  void *pa_02 = ag_std_pair_second(zv_a->p);
 
-  struct ag_std_pair *pb = b->p;
-  void *pb_01 = ag_std_pair_first(pb);
-  void *pb_02 = ag_std_pair_second(pb);
+  void *pb_01 = ag_std_pair_first(zv_b->p);
+  void *pb_02 = ag_std_pair_second(zv_b->p);
 
   int res_01 = ag_std_iter_not_equal(pa_01, pb_01);
   int res_02 = ag_std_iter_not_equal(pa_02, pb_02);
@@ -1702,19 +1698,16 @@ int main(void) {
     void *it = ag_std_begin(zv);
     void *end = ag_std_end(zv);
 
-    // int i = 0;
     while (ag_std_iter_not_equal(it, end)) {
       // The pair.
       void *p = ag_std_iter_deref(it);
       ag_std_print(p);
       printf(" ");
       ag_std_iter_increment(it);
-      // i++;
     }
 
     printf("\n");
   }
-
 
   return 0;
 }
