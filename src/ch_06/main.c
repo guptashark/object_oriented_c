@@ -1217,6 +1217,17 @@ int main(void) {
       ag_std_print, vector_print,
       0);
 
+  void *ag_std_iota_view = ag_std_new(
+      container_vtable,
+      "ag_std_iota_view",
+      object,
+      sizeof(struct ag_std_iota_view),
+      ag_std_new, ag_std_iota_view_ctor,
+      ag_std_begin, ag_std_iota_view_begin,
+      ag_std_end, ag_std_iota_view_end,
+      ag_std_print, ag_std_iota_view_print,
+      0);
+
   void *iterator_vtable = ag_std_new(
       vtable,               // The type of the object.
       "iterator_vtable",   // The name of the object.
@@ -1450,6 +1461,23 @@ int main(void) {
 
   void *class_of_i = ag_std_class_of(i);
   assert(class_of_i == integer);
+
+  {
+    printf("Iota view test: ");
+    void *v_10 = ag_std_new(ag_std_iota_view, 10);
+
+    void *it = ag_std_begin(v_10);
+    void *end = ag_std_end(v_10);
+
+    while (ag_std_iter_not_equal(it, end)) {
+      void *x = ag_std_iter_deref(it);
+      ag_std_print(x);
+      printf(" ");
+      ag_std_iter_increment(it);
+    }
+
+    printf("\n");
+  }
 
   return 0;
 }
