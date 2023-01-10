@@ -817,6 +817,7 @@ void *ag_std_map_end(void *obj) {
   return ag_std_new(ag_std_map_iter, m->arr, m->size);
 }
 
+// We are inserting a pair: (key, value)
 void ag_std_map_insert(void *map_arg, void *obj) {
   struct ag_std_map *m = map_arg;
 
@@ -827,7 +828,7 @@ void ag_std_map_insert(void *map_arg, void *obj) {
 void *ag_std_map_at(void *map_arg, void *key) {
   struct ag_std_map *m = map_arg;
 
-  for (int i = 0; i < m->size; ++i) {
+  for (size_t i = 0; i < m->size; ++i) {
     void *p = m->arr[i];
     void *first = ag_std_pair_first(p);
     if (ag_std_cmp(first, key) == 0) {
@@ -1511,6 +1512,17 @@ int main(void) {
       ag_std_print, vector_print,
       0);
 
+  void *ag_std_map = ag_std_new(
+      container_vtable,
+      "ag_std_map",
+      object,
+      sizeof(struct ag_std_map),
+      ag_std_new, ag_std_map_ctor,
+      ag_std_begin, ag_std_map_begin,
+      ag_std_end, ag_std_map_end,
+      ag_std_print, ag_std_map_print,
+      0);
+
   void *ag_std_iota_view = ag_std_new(
       container_vtable,
       "ag_std_iota_view",
@@ -1869,6 +1881,37 @@ int main(void) {
     void *zv = ag_std_new(ag_std_zip_view, v, iv);
 
     ag_std_range_print(zv);
+  }
+
+  {
+    printf("Map test.. (using asserts)\n");
+
+    void *m = ag_std_new(ag_std_map);
+
+    void *k1 = ag_std_new(integer, 3);
+    void *v1 = ag_std_new(string, "three");
+    void *p1 = ag_std_new(ag_std_pair, k1, v1);
+
+    ag_std_map_insert(m, p1);
+
+    void *k2 = ag_std_new(integer, 4);
+    void *v2 = ag_std_new(string, "four");
+    void *p2 = ag_std_new(ag_std_pair, k2, v2);
+
+    ag_std_map_insert(m, p2);
+
+    // This key will not be in the map.
+    void *k3 = ag_std_new(integer, 5);
+
+    // Now check the find.
+    void *find_01 = ag_std_map_at(m, k1);
+    assert(find_01 == v1);
+
+    void *find_02 = ag_std_map_at(m, k2);
+    assert(find_02 == v2);
+
+    void *find_03 = ag_std_map_at(m, k3);
+    assert(find_03 == NULL);
   }
 
   return 0;
