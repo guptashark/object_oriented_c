@@ -817,11 +817,25 @@ void *ag_std_map_end(void *obj) {
   return ag_std_new(ag_std_map_iter, m->arr, m->size);
 }
 
-void ag_std_map_push_back(void *map_arg, void *obj) {
+void ag_std_map_insert(void *map_arg, void *obj) {
   struct ag_std_map *m = map_arg;
 
   m->arr[m->size] = obj;
   m->size++;
+}
+
+void *ag_std_map_at(void *map_arg, void *key) {
+  struct ag_std_map *m = map_arg;
+
+  for (int i = 0; i < m->size; ++i) {
+    void *p = m->arr[i];
+    void *first = ag_std_pair_first(p);
+    if (ag_std_cmp(first, key) == 0) {
+      return ag_std_pair_second(p);
+    }
+  }
+
+  return NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
