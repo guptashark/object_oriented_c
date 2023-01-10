@@ -723,6 +723,108 @@ void vector_push_back(void *vec_arg, void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ag_std_map (derived from object)
+///////////////////////////////////////////////////////////////////////////////
+
+/* Our map will (at the moment) allow for any kind of object to be
+ * inserted into it, not just objects of a specific type, (though we can
+ * technically enforce this by providing the allowed type during
+ * the construction, ie: void *v = ag_std_new(ag_std_map, integer, string),
+ * at which point every insert will do a check to ensure that the key and
+ * value being inserted are the correct types.
+ */
+struct ag_std_map {
+  struct object obj;
+
+  void **arr;
+  size_t size;
+  size_t capacity;
+};
+
+void *ag_std_map_ctor(void *obj, va_list *app) {
+  // does nothing.
+  (void)app;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_map][ctor]\n");
+  }
+
+  struct ag_std_map *m = obj;
+
+  m->arr = malloc(sizeof(void *) * 8);
+  m->size = 0;
+  m->capacity = 8;
+
+  return obj;
+}
+
+void ag_std_map_dtor(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_map][dtor]\n");
+  }
+
+  // TODO: Free the data.
+}
+
+void ag_std_map_print(void *obj) {
+  (void)obj;
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_map][print]\n");
+  }
+
+  struct ag_std_map *m = obj;
+
+  if (m->size == 0) {
+    printf("ag_std_map([])");
+    return;
+  }
+
+  printf("ag_std_map([");
+  for (size_t i = 0; i < m->size - 1; ++i) {
+    ag_std_print(m->arr[i]);
+    printf(", ");
+  }
+
+  ag_std_print(m->arr[m->size - 1]);
+  printf("])");
+}
+
+// TODO: Remove this from the global namespace... somehow.
+// Had to put this here so ag_std_map_begin and ag_std_map_end
+// would know the type of object to create.
+void *ag_std_map_iter;
+
+void *ag_std_map_begin(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_map][begin]\n");
+  }
+
+  struct ag_std_map *m = obj;
+  return ag_std_new(ag_std_map_iter, m->arr, 0);
+}
+
+void *ag_std_map_end(void *obj) {
+
+  if (DEBUG_MSG) {
+    printf("[ag_std_map][end]\n");
+  }
+
+  struct ag_std_map *m = obj;
+  return ag_std_new(ag_std_map_iter, m->arr, m->size);
+}
+
+void ag_std_map_push_back(void *map_arg, void *obj) {
+  struct ag_std_map *m = map_arg;
+
+  m->arr[m->size] = obj;
+  m->size++;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // iota_view
 ///////////////////////////////////////////////////////////////////////////////
 
