@@ -620,7 +620,7 @@ void list_push_back(void *lst_arg, void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// vector (derived from object)
+// ag_std_vector (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
 /* Our vector will (at the moment) allow for any kind of object to be
@@ -630,7 +630,7 @@ void list_push_back(void *lst_arg, void *obj) {
  * at which point every insert will do a check to ensure that the object
  * being inserted is in fact of type integer.
  */
-struct vector {
+struct ag_std_vector {
   struct object obj;
 
   void **arr;
@@ -638,15 +638,15 @@ struct vector {
   size_t capacity;
 };
 
-void *vector_ctor(void *obj, va_list *app) {
+void *ag_std_vector_ctor(void *obj, va_list *app) {
   // does nothing.
   (void)app;
 
   if (DEBUG_MSG) {
-    printf("[vector][ctor]\n");
+    printf("[ag_std_vector][ctor]\n");
   }
 
-  struct vector *v = obj;
+  struct ag_std_vector *v = obj;
 
   v->arr = malloc(sizeof(void *) * 8);
   v->size = 0;
@@ -655,31 +655,31 @@ void *vector_ctor(void *obj, va_list *app) {
   return obj;
 }
 
-void vector_dtor(void *obj) {
+void ag_std_vector_dtor(void *obj) {
   (void)obj;
 
   if (DEBUG_MSG) {
-    printf("[vector][dtor]\n");
+    printf("[ag_std_vector][dtor]\n");
   }
 
   // TODO: Free the data.
 }
 
-void vector_print(void *obj) {
+void ag_std_vector_print(void *obj) {
   (void)obj;
 
   if (DEBUG_MSG) {
-    printf("[vector][print]\n");
+    printf("[ag_std_vector][print]\n");
   }
 
-  struct vector *v = obj;
+  struct ag_std_vector *v = obj;
 
   if (v->size == 0) {
-    printf("vector([])");
+    printf("ag_std_vector([])");
     return;
   }
 
-  printf("vector([");
+  printf("ag_std_vector([");
   for (size_t i = 0; i < v->size - 1; ++i) {
     ag_std_print(v->arr[i]);
     printf(", ");
@@ -692,31 +692,31 @@ void vector_print(void *obj) {
 // TODO: Remove this from the global namespace... somehow.
 // Had to put this here so vec_begin and vec_end would know the type of
 // object to create.
-void *vec_iter;
+void *ag_std_vector_iter;
 
-void *vector_begin(void *obj) {
+void *ag_std_vector_begin(void *obj) {
 
   if (DEBUG_MSG) {
-    printf("[vector][begin]\n");
+    printf("[ag_std_vector][begin]\n");
   }
 
-  struct vector *v = obj;
-  return ag_std_new(vec_iter, v->arr, 0);
+  struct ag_std_vector *v = obj;
+  return ag_std_new(ag_std_vector_iter, v->arr, 0);
 }
 
-void *vector_end(void *obj) {
+void *ag_std_vector_end(void *obj) {
   (void)obj;
 
   if (DEBUG_MSG) {
-    printf("[vector][end]\n");
+    printf("[ag_std_vector][end]\n");
   }
 
-  struct vector *v = obj;
-  return ag_std_new(vec_iter, v->arr, v->size);
+  struct ag_std_vector *v = obj;
+  return ag_std_new(ag_std_vector_iter, v->arr, v->size);
 }
 
-void vector_push_back(void *vec_arg, void *obj) {
-  struct vector *v = vec_arg;
+void ag_std_vector_push_back(void *vec_arg, void *obj) {
+  struct ag_std_vector *v = vec_arg;
 
   v->arr[v->size] = obj;
   v->size++;
@@ -1207,65 +1207,65 @@ int list_iter_not_equal(void *obj_a, void *obj_b) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// vec_iter (derived from object)
+// ag_std_vector_iter (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
-struct vec_iter {
+struct ag_std_vector_iter {
   struct object obj;
 
   void **arr;
   size_t i;
 };
 
-void *vec_iter_ctor(void *obj, va_list *app) {
+void *ag_std_vector_iter_ctor(void *obj, va_list *app) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_ctor]\n");
+    printf("[ag_std_vector_iter_ctor]\n");
   }
 
   // TODO
   // Need to call the super ctor.
 
-  struct vec_iter *vi = obj;
+  struct ag_std_vector_iter *vi = obj;
   vi->arr = va_arg(*app, void **);
   vi->i = va_arg(*app, size_t);
 
   return obj;
 }
 
-void vec_iter_dtor(void *obj) {
+void ag_std_vector_iter_dtor(void *obj) {
   // TODO
   (void)obj;
 }
 
-void vec_iter_print(void *obj) {
+void ag_std_vector_iter_print(void *obj) {
   (void)obj;
-  printf("[vec_iter][print]");
+  printf("[ag_std_vector_iter][print]");
 }
 
-void vec_iter_increment(void *obj) {
+void ag_std_vector_iter_increment(void *obj) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_inc]\n");
+    printf("[ag_std_vector_iter_inc]\n");
   }
-  struct vec_iter *vi = obj;
+  struct ag_std_vector_iter *vi = obj;
   vi->i++;
 }
 
-void *vec_iter_deref(void *obj) {
+void *ag_std_vector_iter_deref(void *obj) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_deref]\n");
+    printf("[ag_std_vector_iter_deref]\n");
   }
 
-  struct vec_iter *vi = obj;
+  struct ag_std_vector_iter *vi = obj;
   return vi->arr[vi->i];
 }
 
-int vec_iter_not_equal(void *obj_a, void *obj_b) {
+int ag_std_vector_iter_not_equal(void *obj_a, void *obj_b) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_neq]\n");
+    printf("[ag_std_vector_iter_neq]\n");
   }
 
-  struct vec_iter *a = obj_a;
-  struct vec_iter *b = obj_b;
+  struct ag_std_vector_iter *a = obj_a;
+  struct ag_std_vector_iter *b = obj_b;
 
   return a->i != b->i;
 }
@@ -1281,7 +1281,7 @@ struct ag_std_iota_view_iter {
 
 void *ag_std_iota_view_iter_ctor(void *obj, va_list *app) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_ctor]\n");
+    printf("[ag_std_vector_iter_ctor]\n");
   }
 
   // TODO
@@ -1305,7 +1305,7 @@ void ag_std_iota_view_iter_print(void *obj) {
 
 void ag_std_iota_view_iter_increment(void *obj) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_inc]\n");
+    printf("[ag_std_vector_iter_inc]\n");
   }
   struct ag_std_iota_view_iter *vi = obj;
   vi->i++;
@@ -1317,7 +1317,7 @@ void *integer;
 
 void *ag_std_iota_view_iter_deref(void *obj) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_deref]\n");
+    printf("[ag_std_vector_iter_deref]\n");
   }
 
   struct ag_std_iota_view_iter *vi = obj;
@@ -1326,7 +1326,7 @@ void *ag_std_iota_view_iter_deref(void *obj) {
 
 int ag_std_iota_view_iter_not_equal(void *obj_a, void *obj_b) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_neq]\n");
+    printf("[ag_std_vector_iter_neq]\n");
   }
 
   struct ag_std_iota_view_iter *a = obj_a;
@@ -1348,7 +1348,7 @@ struct ag_std_zip_view_iter {
 
 void *ag_std_zip_view_iter_ctor(void *obj, va_list *app) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_ctor]\n");
+    printf("[ag_std_vector_iter_ctor]\n");
   }
 
   // TODO
@@ -1385,7 +1385,7 @@ void ag_std_zip_view_iter_increment(void *obj) {
 
 void *ag_std_zip_view_iter_deref(void *obj) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_deref]\n");
+    printf("[ag_std_vector_iter_deref]\n");
   }
 
   struct ag_std_zip_view_iter *zv = obj;
@@ -1402,7 +1402,7 @@ void *ag_std_zip_view_iter_deref(void *obj) {
 
 int ag_std_zip_view_iter_not_equal(void *obj_a, void *obj_b) {
   if (DEBUG_MSG) {
-    printf("[vec_iter_neq]\n");
+    printf("[ag_std_vector_iter_neq]\n");
   }
 
   struct ag_std_zip_view_iter *zv_a = obj_a;
@@ -1505,11 +1505,11 @@ int main(void) {
       container_vtable,
       "vector",
       object,
-      sizeof(struct vector),
-      ag_std_new, vector_ctor,
-      ag_std_begin, vector_begin,
-      ag_std_end, vector_end,
-      ag_std_print, vector_print,
+      sizeof(struct ag_std_vector),
+      ag_std_new, ag_std_vector_ctor,
+      ag_std_begin, ag_std_vector_begin,
+      ag_std_end, ag_std_vector_end,
+      ag_std_print, ag_std_vector_print,
       0);
 
   void *ag_std_map = ag_std_new(
@@ -1568,15 +1568,15 @@ int main(void) {
 
   // The vec iter symbol must also exist outside of the main fn,
   // becuase vec_begin and vec_end functions create iterators.
-  vec_iter = ag_std_new(
+  ag_std_vector_iter = ag_std_new(
       iterator_vtable,
-      "vec_iter",
+      "ag_std_vector_iter",
       object,
-      sizeof(struct vec_iter),
-      ag_std_new, vec_iter_ctor,
-      ag_std_iter_increment, vec_iter_increment,
-      ag_std_iter_deref, vec_iter_deref,
-      ag_std_iter_not_equal, vec_iter_not_equal,
+      sizeof(struct ag_std_vector_iter),
+      ag_std_new, ag_std_vector_iter_ctor,
+      ag_std_iter_increment, ag_std_vector_iter_increment,
+      ag_std_iter_deref, ag_std_vector_iter_deref,
+      ag_std_iter_not_equal, ag_std_vector_iter_not_equal,
       0);
 
   // The ag_std_iota_view_iter symbol must also exist outside of the main fn,
@@ -1757,9 +1757,9 @@ int main(void) {
     ag_std_print(v);
     printf("\n");
 
-    vector_push_back(v, ai);
-    vector_push_back(v, bi);
-    vector_push_back(v, ci);
+    ag_std_vector_push_back(v, ai);
+    ag_std_vector_push_back(v, bi);
+    ag_std_vector_push_back(v, ci);
 
     ag_std_print(v);
     printf("\n");
@@ -1767,8 +1767,8 @@ int main(void) {
     {
       printf("Printing this with a vec iterator: ");
       printf("{ ");
-      void *it = vector_begin(v);
-      void *vec_end = vector_end(v);
+      void *it = ag_std_vector_begin(v);
+      void *vec_end = ag_std_vector_end(v);
 
       while (ag_std_iter_not_equal(it, vec_end)) {
         ag_std_print(ag_std_iter_deref(it));
@@ -1815,9 +1815,9 @@ int main(void) {
 
     void *v = ag_std_new(vector);
 
-    vector_push_back(v, ag_std_new(string, "Harry"));
-    vector_push_back(v, ag_std_new(string, "Ron"));
-    vector_push_back(v, ag_std_new(string, "Hermione"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Harry"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Ron"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Hermione"));
 
     void *iv = ag_std_new(ag_std_iota_view, 2);
 
@@ -1842,9 +1842,9 @@ int main(void) {
 
     void *v = ag_std_new(vector);
 
-    vector_push_back(v, ag_std_new(string, "Harry"));
-    vector_push_back(v, ag_std_new(string, "Ron"));
-    vector_push_back(v, ag_std_new(string, "Hermione"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Harry"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Ron"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Hermione"));
 
     void *iv = ag_std_new(ag_std_iota_view, 2);
 
@@ -1872,9 +1872,9 @@ int main(void) {
 
     void *v = ag_std_new(vector);
 
-    vector_push_back(v, ag_std_new(string, "Harry"));
-    vector_push_back(v, ag_std_new(string, "Ron"));
-    vector_push_back(v, ag_std_new(string, "Hermione"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Harry"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Ron"));
+    ag_std_vector_push_back(v, ag_std_new(string, "Hermione"));
 
     void *iv = ag_std_new(ag_std_iota_view, 2);
 
