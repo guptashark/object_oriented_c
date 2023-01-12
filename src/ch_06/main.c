@@ -453,40 +453,45 @@ void *ag_std_pair_second(void *obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// list (derived from object)
+// ag_std_list (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
-/* Our list will (at the moment) allow for any kind of object to be
+/* Our ag_std_list will (at the moment) allow for any kind of object to be
  * inserted into it, not just objects of a specific type, (though we can
  * technically enforce this by providing the allowed type during
- * the lists construction, ie: void *lst = ag_std_new(list, integer),
+ * the lists construction, ie: void *lst = ag_std_new(ag_std_list, integer),
  * at which point every insert will do a check to ensure that the object
  * being inserted is in fact of type integer.
  */
 
-struct list_node {
+struct ag_std_list_node {
   void *obj; // not a pointer to the base object, just a pointer to
              // the newly inserted object.
-  struct list_node *next;
-  struct list_node *prev;
+  struct ag_std_list_node *next;
+  struct ag_std_list_node *prev;
 };
 
-// Internal function, nobody except list functions will call this.
-struct list_node *list_node_ctor(void *obj) {
-  struct list_node *node = malloc(sizeof(struct list_node));
+// Internal function, nobody except ag_std_list functions will call this.
+struct ag_std_list_node *ag_std_list_node_ctor(void *obj) {
+  struct ag_std_list_node *node = malloc(sizeof(struct ag_std_list_node));
   node->next = NULL;
   node->prev = NULL;
   node->obj = obj;
   return node;
 }
 
-void list_node_link(struct list_node *a, struct list_node *b) {
+void ag_std_list_node_link
+(struct ag_std_list_node *a, struct ag_std_list_node *b) {
+
   a->next = b;
   b->prev = a;
 }
 
-void list_node_insert
-(struct list_node *a, struct list_node *b, struct list_node *c) {
+void ag_std_list_node_insert(
+    struct ag_std_list_node *a,
+    struct ag_std_list_node *b,
+    struct ag_std_list_node *c)
+{
   a->next = b;
   b->next = c;
 
@@ -494,28 +499,28 @@ void list_node_insert
   c->prev = b;
 }
 
-struct list {
+struct ag_std_list {
   struct object obj; // base
 
-  struct list_node *front;
-  struct list_node *back;
+  struct ag_std_list_node *front;
+  struct ag_std_list_node *back;
   size_t size;
 };
 
-void *list_ctor(void *obj, va_list *app) {
+void *ag_std_list_ctor(void *obj, va_list *app) {
   // does nothing.
   (void)app;
 
   if (DEBUG_MSG) {
-    printf("[list][ctor]\n");
+    printf("[ag_std_list][ctor]\n");
   }
 
-  struct list *lst = obj;
+  struct ag_std_list *lst = obj;
 
-  struct list_node *a = list_node_ctor(NULL);
-  struct list_node *b = list_node_ctor(NULL);
+  struct ag_std_list_node *a = ag_std_list_node_ctor(NULL);
+  struct ag_std_list_node *b = ag_std_list_node_ctor(NULL);
 
-  list_node_link(a, b);
+  ag_std_list_node_link(a, b);
   lst->front = a;
   lst->back = b;
 
@@ -524,18 +529,18 @@ void *list_ctor(void *obj, va_list *app) {
   return obj;
 }
 
-void list_dtor(void *obj) {
+void ag_std_list_dtor(void *obj) {
   (void)obj;
 
   // TODO: Delete stuff.
 
   if (DEBUG_MSG) {
-    printf("[list][dtor]\n");
+    printf("[ag_std_list][dtor]\n");
   }
 }
 
-void list_print(void *obj) {
-  struct list *lst = obj;
+void ag_std_list_print(void *obj) {
+  struct ag_std_list *lst = obj;
 
   if (lst->size == 0) {
     printf("[]");
@@ -543,7 +548,7 @@ void list_print(void *obj) {
   } else {
 
     printf("[");
-    struct list_node *c = lst->front->next;
+    struct ag_std_list_node *c = lst->front->next;
     while (c->next->obj != NULL) {
       ag_std_print(c->obj);
       printf(", ");
@@ -555,9 +560,9 @@ void list_print(void *obj) {
   }
 }
 
-int list_cmp(void *obj_a, void *obj_b) {
-  struct list *a = (struct list *)obj_a;
-  struct list *b = (struct list *)obj_b;
+int ag_std_list_cmp(void *obj_a, void *obj_b) {
+  struct ag_std_list *a = (struct ag_std_list *)obj_a;
+  struct ag_std_list *b = (struct ag_std_list *)obj_b;
 
   (void)a;
   (void)b;
@@ -568,53 +573,53 @@ int list_cmp(void *obj_a, void *obj_b) {
 }
 
 // TODO: Remove this from the global namespace... somehow.
-// Had to put this here so list_begin and end would know the type of
+// Had to put this here so ag_std_list_begin and end would know the type of
 // object to create.
-void *list_iter;
+void *ag_std_list_iter;
 
-void *list_begin(void *obj) {
+void *ag_std_list_begin(void *obj) {
   (void)obj;
 
   if (DEBUG_MSG) {
-    printf("[list][begin]\n");
+    printf("[ag_std_list][begin]\n");
   }
 
-  struct list *lst = obj;
-  struct list_node *c = lst->front->next;
+  struct ag_std_list *lst = obj;
+  struct ag_std_list_node *c = lst->front->next;
 
-  return ag_std_new(list_iter, c);
+  return ag_std_new(ag_std_list_iter, c);
 }
 
-void *list_end(void *obj) {
+void *ag_std_list_end(void *obj) {
   (void)obj;
 
   if (DEBUG_MSG) {
-    printf("[list][end]\n");
+    printf("[ag_std_list][end]\n");
   }
-  struct list *lst = obj;
-  struct list_node *c = lst->back;
+  struct ag_std_list *lst = obj;
+  struct ag_std_list_node *c = lst->back;
 
-  return ag_std_new(list_iter, c);
+  return ag_std_new(ag_std_list_iter, c);
 }
 
-void list_push_front(void *lst_arg, void *obj) {
-  struct list *lst = lst_arg;
-  struct list_node *new_node = list_node_ctor(obj);
+void ag_std_list_push_front(void *lst_arg, void *obj) {
+  struct ag_std_list *lst = lst_arg;
+  struct ag_std_list_node *new_node = ag_std_list_node_ctor(obj);
 
-  struct list_node *a = lst->front;
-  struct list_node *c = a->next;
-  list_node_insert(a, new_node, c);
+  struct ag_std_list_node *a = lst->front;
+  struct ag_std_list_node *c = a->next;
+  ag_std_list_node_insert(a, new_node, c);
 
   lst->size++;
 }
 
-void list_push_back(void *lst_arg, void *obj) {
-  struct list *lst = lst_arg;
-  struct list_node *new_node = list_node_ctor(obj);
+void ag_std_list_push_back(void *lst_arg, void *obj) {
+  struct ag_std_list *lst = lst_arg;
+  struct ag_std_list_node *new_node = ag_std_list_node_ctor(obj);
 
-  struct list_node *c = lst->back;
-  struct list_node *a = c->prev;
-  list_node_insert(a, new_node, c);
+  struct ag_std_list_node *c = lst->back;
+  struct ag_std_list_node *a = c->prev;
+  ag_std_list_node_insert(a, new_node, c);
 
   lst->size++;
 }
@@ -1146,62 +1151,62 @@ int ag_std_iter_not_equal(void *obj_a, void *obj_b) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// list_iter (derived from object)
+// ag_std_list_iter (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
 
-struct list_iter {
+struct ag_std_list_iter {
   struct object obj;
-  struct list_node *c;
+  struct ag_std_list_node *c;
 };
 
-void *list_iter_ctor(void *obj, va_list *app) {
+void *ag_std_list_iter_ctor(void *obj, va_list *app) {
   if (DEBUG_MSG) {
-    printf("[list_iter_ctor]\n");
+    printf("[ag_std_list_iter_ctor]\n");
   }
 
   // TODO
   // Need to call the super ctor.
 
-  struct list_iter *li = obj;
-  li->c = va_arg(*app, struct list_node *);
+  struct ag_std_list_iter *li = obj;
+  li->c = va_arg(*app, struct ag_std_list_node *);
 
   return obj;
 }
 
-void list_iter_dtor(void *obj) {
+void ag_std_list_iter_dtor(void *obj) {
   // TODO
   (void)obj;
 }
 
-void list_iter_print(void *obj) {
+void ag_std_list_iter_print(void *obj) {
   (void)obj;
-  printf("[list_iter][print]");
+  printf("[ag_std_list_iter][print]");
 }
 
-void list_iter_increment(void *obj) {
+void ag_std_list_iter_increment(void *obj) {
   if (DEBUG_MSG) {
-    printf("[list_iter_inc]\n");
+    printf("[ag_std_list_iter_inc]\n");
   }
-  struct list_iter *li = obj;
+  struct ag_std_list_iter *li = obj;
   li->c = li->c->next;
 }
 
-void *list_iter_deref(void *obj) {
+void *ag_std_list_iter_deref(void *obj) {
   if (DEBUG_MSG) {
-    printf("[list_iter_deref]\n");
+    printf("[ag_std_list_iter_deref]\n");
   }
 
-  struct list_iter *li = obj;
+  struct ag_std_list_iter *li = obj;
   return li->c->obj;
 }
 
-int list_iter_not_equal(void *obj_a, void *obj_b) {
+int ag_std_list_iter_not_equal(void *obj_a, void *obj_b) {
   if (DEBUG_MSG) {
-    printf("[list_iter_neq]\n");
+    printf("[ag_std_list_iter_neq]\n");
   }
 
-  struct list_iter *a = obj_a;
-  struct list_iter *b = obj_b;
+  struct ag_std_list_iter *a = obj_a;
+  struct ag_std_list_iter *b = obj_b;
 
   return a->c != b->c;
 }
@@ -1489,16 +1494,16 @@ int main(void) {
       ag_std_new, container_vtable_ctor,
       0);
 
-  void *list = ag_std_new(
+  void *ag_std_list = ag_std_new(
       container_vtable,     // The type of the object.
       "list",               // The name of the object.
       object,               // The superclass.
-      sizeof(struct list), // The size of the objects.
-      ag_std_new, list_ctor,
-      ag_std_begin, list_begin,
-      ag_std_end, list_end,
-      ag_std_print, list_print,
-      ag_std_cmp, list_cmp,
+      sizeof(struct ag_std_list), // The size of the objects.
+      ag_std_new, ag_std_list_ctor,
+      ag_std_begin, ag_std_list_begin,
+      ag_std_end, ag_std_list_end,
+      ag_std_print, ag_std_list_print,
+      ag_std_cmp, ag_std_list_cmp,
       0);
 
   void *vector = ag_std_new(
@@ -1553,17 +1558,17 @@ int main(void) {
       ag_std_new, iterator_vtable_ctor,
       0);
 
-  // The list_iter symbol must exist outside of the main function, because
-  // the list_begin and list_end functions create iterators.
-  list_iter = ag_std_new(
+  // The ag_std_list_iter symbol must exist outside of the main function, because
+  // the ag_std_list_begin and ag_std_list_end functions create iterators.
+  ag_std_list_iter = ag_std_new(
       iterator_vtable,
-      "list_iter",
+      "ag_std_list_iter",
       object,
-      sizeof(struct list_iter),
-      ag_std_new, list_iter_ctor,
-      ag_std_iter_increment, list_iter_increment,
-      ag_std_iter_deref, list_iter_deref,
-      ag_std_iter_not_equal, list_iter_not_equal,
+      sizeof(struct ag_std_list_iter),
+      ag_std_new, ag_std_list_iter_ctor,
+      ag_std_iter_increment, ag_std_list_iter_increment,
+      ag_std_iter_deref, ag_std_list_iter_deref,
+      ag_std_iter_not_equal, ag_std_list_iter_not_equal,
       0);
 
   // The vec iter symbol must also exist outside of the main fn,
@@ -1652,11 +1657,11 @@ int main(void) {
       ag_std_cmp, string_cmp,
       0);
 
-  void *lst = ag_std_new(list);
+  void *lst = ag_std_new(ag_std_list);
 
   ag_std_print(lst);
   printf("\n");
-  assert(ag_std_class_of(lst) == list);
+  assert(ag_std_class_of(lst) == ag_std_list);
 
   void *v = ag_std_new(vector);
   ag_std_print(v);
@@ -1683,18 +1688,18 @@ int main(void) {
     printf("\n");
   }
 
-  list_push_back(lst, i);
-  list_push_back(lst, i2);
-  list_push_back(lst, s1);
-  list_push_back(lst, i3);
-  list_push_back(lst, i4);
-  list_push_back(lst, ag_std_new(floating, 5.3));
+  ag_std_list_push_back(lst, i);
+  ag_std_list_push_back(lst, i2);
+  ag_std_list_push_back(lst, s1);
+  ag_std_list_push_back(lst, i3);
+  ag_std_list_push_back(lst, i4);
+  ag_std_list_push_back(lst, ag_std_new(floating, 5.3));
 
   {
-    printf("Printing this with a list iterator: ");
+    printf("Printing this with a ag_std_list iterator: ");
     printf("{ ");
-    void *it = list_begin(lst);
-    void *lst_end = list_end(lst);
+    void *it = ag_std_list_begin(lst);
+    void *lst_end = ag_std_list_end(lst);
     (void)lst_end;
 
     while (ag_std_iter_not_equal(it, lst_end)) {
@@ -1723,26 +1728,26 @@ int main(void) {
     void *ci = ag_std_new(integer, 30);
     void *cs = ag_std_new(string, "thirty");
 
-    void *lst_a = ag_std_new(list);
-    list_push_back(lst_a, ai);
-    list_push_back(lst_a, as);
+    void *lst_a = ag_std_new(ag_std_list);
+    ag_std_list_push_back(lst_a, ai);
+    ag_std_list_push_back(lst_a, as);
 
-    void *lst_b = ag_std_new(list);
-    list_push_back(lst_b, bi);
-    list_push_back(lst_b, bs);
+    void *lst_b = ag_std_new(ag_std_list);
+    ag_std_list_push_back(lst_b, bi);
+    ag_std_list_push_back(lst_b, bs);
 
-    void *lst_c = ag_std_new(list);
-    list_push_back(lst_c, ci);
-    list_push_back(lst_c, cs);
+    void *lst_c = ag_std_new(ag_std_list);
+    ag_std_list_push_back(lst_c, ci);
+    ag_std_list_push_back(lst_c, cs);
 
-    void *lst_final = ag_std_new(list);
-    list_push_back(lst_final, lst_a);
+    void *lst_final = ag_std_new(ag_std_list);
+    ag_std_list_push_back(lst_final, lst_a);
 
     ag_std_print(lst_final);
     printf("\n");
 
-    list_push_back(lst_final, lst_b);
-    list_push_back(lst_final, lst_c);
+    ag_std_list_push_back(lst_final, lst_b);
+    ag_std_list_push_back(lst_final, lst_c);
 
     ag_std_print(lst_final);
     printf("\n");
