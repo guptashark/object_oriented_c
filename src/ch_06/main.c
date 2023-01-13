@@ -5,8 +5,6 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#define USING_SUPER
-
 #define DEBUG_MSG 0
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,7 +240,6 @@ struct integer {
 
 void *integer_ctor(void *obj, va_list *app) {
 
-#ifdef USING_SUPER
   // Run the parent ctor using super.
   // We don't need to keep track of who the parent is.
   struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
@@ -251,11 +248,6 @@ void *integer_ctor(void *obj, va_list *app) {
   } else {
     super->ctor(obj, app);
   }
-#else
-  // Run the parent ctor manually.
-  // We know the parent is object.
-  object->ctor(obj, app);
-#endif
 
   // now we run our own construction.
   struct integer *i = (struct integer *)obj;
@@ -275,16 +267,10 @@ void integer_dtor(void *obj) {
     printf("[integer][dtor]\n");
   }
 
-#ifdef USING_SUPER
   // Run the parent dtor using super.
   // We don't need to keep track of who the parent is.
   struct ag_std_vtable *super = (struct ag_std_vtable *)ag_std_super(obj);
   super->dtor(obj);
-#else
-  // Run the parent dtor manually.
-  // We know the parent is object.
-  object->dtor(obj);
-#endif
 }
 
 void integer_print(void *obj) {
