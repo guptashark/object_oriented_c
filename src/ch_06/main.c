@@ -713,6 +713,15 @@ void ag_std_vector_push_back(void *vec_arg, void *obj) {
   v->size++;
 }
 
+void ag_std_vector_pop_back(void *vec_arg) {
+  struct ag_std_vector *v = vec_arg;
+  if (v->size > 0) {
+    // Should we call the dtor on the popped object?
+    // TODO Decide what to do with popped object.
+    v->size--;
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // ag_std_map (derived from object)
 ///////////////////////////////////////////////////////////////////////////////
@@ -1751,6 +1760,8 @@ int main(void) {
     ag_std_vector_push_back(v, ai);
     ag_std_vector_push_back(v, bi);
     ag_std_vector_push_back(v, ci);
+    ag_std_vector_push_back(v, ci);
+    ag_std_vector_pop_back(v);
 
     ag_std_print(v);
     printf("\n");
